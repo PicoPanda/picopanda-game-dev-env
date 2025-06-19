@@ -1,0 +1,13 @@
+-- This variable will be global to the script
+counter = 0
+
+function game_logic_init()
+    print("Lua game_logic_init from C array!")
+    counter = 0
+end
+
+function game_logic_loop()
+    counter = counter + 1
+    print("Lua game_logic_loop from C array! Counter:", counter)
+    draw_string(0, 10, "Counter: " .. tostring(counter), 5, 1, 0x0F)
+end
