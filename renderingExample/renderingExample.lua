@@ -11,12 +11,12 @@ function game_logic_loop()
     local buttons = get_button_status()
 
     if buttons.up then
-        draw_string(0, 80, "UP pressed!", 5, 1, 0x0F)
+        draw_string(0, 80, "UP pressed!", FONT_4X5_FIXED, 1, 0x0F)
     end
-    
+
     draw_string(0, 10, "Counter: " .. tostring(counter), 5, 1, 0x0F)
     draw_pixel(30, 30, 0x0F);
-    
+
     draw_circle(63, 63, 15, true, 0x0F);
 
     draw_line(0, 0, 127, 127, 0x0F);
@@ -26,9 +26,8 @@ function game_logic_loop()
     if counter % 100 == 0 then
         flip = not flip
 
-    end   
+    end
 
-
-    draw_sprite(32, 0, 32, 32, 2, 2, flip, false)
+    draw_sprite(PIXELS_32x32, 0, 32, 32, 2, 2, flip, false)
 
 end

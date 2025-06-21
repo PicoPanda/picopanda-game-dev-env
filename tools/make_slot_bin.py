@@ -2,6 +2,43 @@
 import sys
 import os
 import argparse
+import re
+
+def extract_enums_from_api(api_file_path):
+    """Extract enum mappings from picopanda_api.lua file"""
+    enum_mappings = {}
+    
+    try:
+        with open(api_file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Find all lines that match the pattern: CONSTANT_NAME = number
+        # This will match lines like: PIXELS_8x8 = 8
+        pattern = r'^(\w+)\s*=\s*(\d+)\s*$'
+        matches = re.findall(pattern, content, re.MULTILINE)
+        
+        for constant_name, numeric_value in matches:
+            enum_mappings[constant_name] = numeric_value
+            
+        print(f"Extracted {len(enum_mappings)} enum constants from {api_file_path}")
+        
+    except FileNotFoundError:
+        print(f"Error: {api_file_path} not found")
+        print("The picopanda_api.lua file is required for enum resolution")
+        sys.exit(1)
+    
+    return enum_mappings
+
+def resolve_enums_in_lua(lua_code, enum_mappings):
+    """Replace enum constants with their actual numeric values in Lua code"""
+    
+    # Replace each enum with its numeric value
+    for enum_name, numeric_value in enum_mappings.items():
+        # Use word boundaries to avoid partial matches
+        pattern = r'\b' + re.escape(enum_name) + r'\b'
+        lua_code = re.sub(pattern, numeric_value, lua_code)
+    
+    return lua_code
 
 def main():
     # Set up argument parser
@@ -16,7 +53,7 @@ Examples:
 
 The script creates a 128KB binary file containing:
 - 4-byte Lua script length
-- Lua script data
+- Lua script data (with enums resolved to numeric values)
 - 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
 - Padding to fill 128KB slot
         """
@@ -34,9 +71,19 @@ The script creates a 128KB binary file containing:
     slot_size = 0x20000  # 128KB
     SPRITE_SHEET_SIZE = 8192  # 128x128 pixels at 4 bits per pixel
 
-    # Read the Lua script
-    with open(script_path, "rb") as f:
-        lua_data = f.read()
+    # Extract enum mappings from the API file
+    api_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "picopanda_api.lua")
+    enum_mappings = extract_enums_from_api(api_file_path)
+
+    # Read the Lua script as text first
+    with open(script_path, "r", encoding="utf-8") as f:
+        lua_code = f.read()
+
+    # Resolve enums to numeric values
+    lua_code = resolve_enums_in_lua(lua_code, enum_mappings)
+    
+    # Convert to bytes for binary output
+    lua_data = lua_code.encode('utf-8')
 
     # Read the sprite sheet if provided
     sprite_data = None
