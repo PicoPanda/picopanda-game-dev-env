@@ -2,22 +2,53 @@ import serial
 import time
 import sys
 import os
+import argparse
 
-# Change this to your Pico's serial port
-PORT = '/dev/tty.usbmodem144702'
-BAUD = 115200
-BIN_PATH = 'game_slot0.bin'
 BINARY_SIZE = 128 * 1024  # 128kB
 
 def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(
+        description="Upload a PicoPanda game binary to the device via UART",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s -p /dev/ttyACM0 -f game_slot0.bin
+  %(prog)s -p /dev/tty.usbmodem144702 -f game_slot1.bin -b 115200
+  %(prog)s -h
+
+The script will:
+1. Send UPLOAD command to Pico
+2. Prompt for game slot number
+3. Send the binary data (128KB)
+4. Wait for confirmation
+        """
+    )
+    
+    parser.add_argument("-p", "--port", 
+                       required=True,
+                       help="Serial port (e.g., /dev/ttyACM0, /dev/tty.usbmodem144702)")
+    parser.add_argument("-b", "--baud", 
+                       type=int, required=True,
+                       help="Baud rate (e.g., 115200)")
+    parser.add_argument("-f", "--file", 
+                       required=True,
+                       help="Binary file to upload")
+    
+    args = parser.parse_args()
+    
+    PORT = args.port
+    BAUD = args.baud
+    BIN_PATH = args.file
+
     # Read the binary file
     if not os.path.exists(BIN_PATH):
-        print(f"Binary file '{BIN_PATH}' not found.")
+        print(f"Error: Binary file '{BIN_PATH}' not found.")
         sys.exit(1)
     with open(BIN_PATH, 'rb') as f:
         data = f.read()
     if len(data) != BINARY_SIZE:
-        print(f"Binary file size is {len(data)} bytes, expected {BINARY_SIZE} bytes.")
+        print(f"Error: Binary file size is {len(data)} bytes, expected {BINARY_SIZE} bytes.")
         sys.exit(1)
 
     try:
@@ -34,7 +65,6 @@ def main():
 
             # 2. Wait for the "Enter Game Slot: " prompt
             prompt = ser.read_until(b': ')
-            print("Pico:", prompt.decode(errors='replace').strip())
             if b'Enter Game Slot: ' not in prompt:
                 print("Error: Did not receive game slot prompt from Pico.")
                 sys.exit(1)
@@ -52,7 +82,6 @@ def main():
 
             # 5. Wait for the "READY" response from the Pico
             response = ser.readline()
-            print("Pico:", response.decode(errors='replace').strip())
             if b'READY' not in response:
                 print("Error: Did not receive READY signal from Pico.")
                 sys.exit(1)
@@ -73,7 +102,6 @@ def main():
                         break
                 time.sleep(0.01)
             
-            print("Pico:", response.decode(errors='replace').strip())
             if b'OK' in response:
                 print("Upload complete!")
             else:
@@ -81,7 +109,8 @@ def main():
                 sys.exit(1)
 
     except serial.SerialException as e:
-        print(f"Serial error: {e}")
+        print(f"Error: Serial connection failed - {e}")
+        print(f"Please check that port '{PORT}' exists and is accessible.")
         sys.exit(1)
 
 if __name__ == "__main__":

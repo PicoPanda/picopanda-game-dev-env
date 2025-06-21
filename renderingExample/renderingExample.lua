@@ -2,6 +2,7 @@ counter = 0
 
 function game_logic_init()
     counter = 0
+    flip = false
 end
 
 function game_logic_loop()
@@ -22,6 +23,12 @@ function game_logic_loop()
 
     draw_rectangle(0, 63, 10, 10, true, 0x0F);
 
-    draw_sprite( 32, 0, 32, 32, 2, 2, false, false)
+    if counter % 100 == 0 then
+        flip = not flip
+
+    end   
+
+
+    draw_sprite(32, 0, 32, 32, 2, 2, flip, false)
 
 end
