@@ -34,21 +34,27 @@ project(pwmNoteExample C CXX ASM)
 pico_sdk_init()
 
 # Add more source files to the project.
-set(LIBS_DIR ../../libs)
+set(LIBS_DIR ${CMAKE_SOURCE_DIR}/../../libs)
 set(SOURCES_LIBS
+    ${LIBS_DIR}/display/display.c
+    ${LIBS_DIR}/input/button_input.c
+    ${LIBS_DIR}/system_manager/global_system_variables.c
     ${LIBS_DIR}/audio/wavetable.c
     ${LIBS_DIR}/audio/noise_bit.c
     ${LIBS_DIR}/audio/pwm_note.c
+    ${CMAKE_SOURCE_DIR}/pwm_note_example.c
 )
 
 # Add executable. Default name is the project name, version 0.1
-add_executable( pwmNoteExample pwmNoteExample.c
+add_executable( pwmNoteExample ${LIBS_DIR}/system_manager/system_manager.c
                 ${SOURCES_LIBS}
 )
 
-
 pico_set_program_name(pwmNoteExample "pwmNoteExample")
 pico_set_program_version(pwmNoteExample "0.1")
+
+# Generate PIO header
+pico_generate_pio_header(pwmNoteExample ${CMAKE_SOURCE_DIR}/../../libs/pio/spi.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(pwmNoteExample 1)
@@ -57,9 +63,13 @@ pico_enable_stdio_usb(pwmNoteExample 0)
 # Add the standard library to the build
 target_link_libraries(pwmNoteExample
         pico_stdlib
+        pico_multicore
         hardware_clocks
         hardware_irq
-        hardware_pwm)
+        hardware_pwm
+        hardware_dma
+        hardware_pio
+        hardware_spi)
 
 # Add the standard include files to the build
 target_include_directories(pwmNoteExample PRIVATE
