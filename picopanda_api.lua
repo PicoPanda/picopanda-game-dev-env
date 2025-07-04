@@ -109,6 +109,16 @@ function get_map_sprite_index(celx, cely) end
 ---@return number The flag value or bit
 function get_sprite_flags(n, f) end
 
+---Set the camera offset for all future draw operations
+---@param x number The x pixel offset to subtract from draw coordinates
+---@param y number The y pixel offset to subtract from draw coordinates
+function set_camera_offset(x, y) end
+
+---Get the current camera offset
+---@return number x The current x pixel offset
+---@return number y The current y pixel offset
+function get_camera_offset() end
+
 -- Game lifecycle functions (these should be defined in your game script)
 
 ---Called once when the game starts
