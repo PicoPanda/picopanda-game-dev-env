@@ -97,6 +97,18 @@ function draw_string(x, y, str, font_index, scale_factor, value) end
 ---@param layer number|nil If specified, only draw sprites that have flags set for every bit in this value (bitfield). Default is 0 (draw all sprites).
 function draw_map(celx, cely, sx, sy, celw, celh, layer) end
 
+---Get the sprite index assigned to a map cell
+---@param celx number The column (x) coordinate of the map cell
+---@param cely number The row (y) coordinate of the map cell
+---@return number The sprite index at that cell (0-255), or 255 if out of bounds
+function get_map_sprite_index(celx, cely) end
+
+---Get the value of a sprite's flags
+---@param n number The sprite number (0-255)
+---@param f number|nil The flag index (1-8). If 0 or omitted, returns the full flag byte. If 1-8, returns 1 if that flag bit is set, else 0.
+---@return number The flag value or bit
+function get_sprite_flags(n, f) end
+
 -- Game lifecycle functions (these should be defined in your game script)
 
 ---Called once when the game starts
