@@ -87,6 +87,16 @@ function draw_rectangle(x1, y1, width, height, filled, value) end
 ---@param value number Text color value (0-15)
 function draw_string(x, y, str, font_index, scale_factor, value) end
 
+---Draw a region of the map to the screen, using sprite sheet and flags
+---@param celx number The column of the map cell in the upper left corner (0 = leftmost)
+---@param cely number The row of the map cell in the upper left corner (0 = topmost)
+---@param sx number The x coordinate on the screen to place the upper left corner
+---@param sy number The y coordinate on the screen to place the upper left corner
+---@param celw number The number of map cells wide in the region to draw
+---@param celh number The number of map cells tall in the region to draw
+---@param layer number|nil If specified, only draw sprites that have flags set for every bit in this value (bitfield). Default is 0 (draw all sprites).
+function draw_map(celx, cely, sx, sy, celw, celh, layer) end
+
 -- Game lifecycle functions (these should be defined in your game script)
 
 ---Called once when the game starts
