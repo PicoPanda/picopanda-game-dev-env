@@ -87,6 +87,38 @@ function draw_rectangle(x1, y1, width, height, filled, value) end
 ---@param value number Text color value (0-15)
 function draw_string(x, y, str, font_index, scale_factor, value) end
 
+---Draw a region of the map to the screen, using sprite sheet and flags
+---@param celx number The column of the map cell in the upper left corner (0 = leftmost)
+---@param cely number The row of the map cell in the upper left corner (0 = topmost)
+---@param sx number The x coordinate on the screen to place the upper left corner
+---@param sy number The y coordinate on the screen to place the upper left corner
+---@param celw number The number of map cells wide in the region to draw
+---@param celh number The number of map cells tall in the region to draw
+---@param layer number|nil If specified, only draw sprites that have flags set for every bit in this value (bitfield). Default is 0 (draw all sprites).
+function draw_map(celx, cely, sx, sy, celw, celh, layer) end
+
+---Get the sprite index assigned to a map cell
+---@param celx number The column (x) coordinate of the map cell
+---@param cely number The row (y) coordinate of the map cell
+---@return number The sprite index at that cell (0-255), or 255 if out of bounds
+function get_map_sprite_index(celx, cely) end
+
+---Get the value of a sprite's flags
+---@param n number The sprite number (0-255)
+---@param f number|nil The flag index (1-8). If 0 or omitted, returns the full flag byte. If 1-8, returns 1 if that flag bit is set, else 0.
+---@return number The flag value or bit
+function get_sprite_flags(n, f) end
+
+---Set the camera offset for all future draw operations
+---@param x number The x pixel offset to subtract from draw coordinates
+---@param y number The y pixel offset to subtract from draw coordinates
+function set_camera_offset(x, y) end
+
+---Get the current camera offset
+---@return number x The current x pixel offset
+---@return number y The current y pixel offset
+function get_camera_offset() end
+
 -- Game lifecycle functions (these should be defined in your game script)
 
 ---Called once when the game starts

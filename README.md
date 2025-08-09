@@ -145,13 +145,13 @@ uint8_t sprite_sheet[8192] = {
 #### 2. Build Game Slot Binary
 Combine your Lua game code and sprite sheet into a single binary:
 ```bash
-python make_slot_bin.py your_game.lua game_slot.bin sprite_sheet.bin
+python make_slot_bin.py your_game.lua game_slot.bin game_export.bin
 ```
 
 **Arguments:**
 - `your_game.lua`: Your Lua game file
 - `game_slot.bin`: Output binary file
-- `sprite_sheet.bin`: Sprite sheet binary (optional, creates default if not provided)
+- `game_export.bin`: Combined binary containing sprite sheet, map, and sprite flags (exported from VSCode extension)
 
 #### 3. Upload to PicoPanda
 Upload the game binary to your PicoPanda device:
