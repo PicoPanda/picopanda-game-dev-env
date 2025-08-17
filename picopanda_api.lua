@@ -13,6 +13,14 @@
 ---@field select boolean True if the SELECT button is pressed
 ---@field a boolean True if the A button is pressed
 ---@field b boolean True if the B button is pressed
+---@field up_pressed boolean True if the UP button was pressed in the last frame
+---@field down_pressed boolean True if the DOWN button was pressed in the last frame
+---@field left_pressed boolean True if the LEFT button was pressed in the last frame
+---@field right_pressed boolean True if the RIGHT button was pressed in the last frame
+---@field start_pressed boolean True if the START button was pressed in the last frame
+---@field select_pressed boolean True if the SELECT button was pressed in the last frame
+---@field a_pressed boolean True if the A button was pressed in the last frame
+---@field b_pressed boolean True if the B button was pressed in the last frame
 
 ---@class SpriteSize
 ---@field PIXELS_8x8 number 8x8 pixel sprites
