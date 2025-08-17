@@ -229,6 +229,17 @@ python upload_game.py -p /dev/ttyACM0 -b 115200 -f game_slot.bin
 - `-b 115200`: Baud rate
 - `-f game_slot.bin`: Binary file to upload
 
+### Testing in the Emulator
+
+Once you've created your `game_slot.bin` file, you can test it in the PicoPanda emulator before uploading to the physical device:
+
+1. **Start the PicoPanda emulator**
+2. **Select a game slot** (e.g., Slot 0, Slot 1, etc.)
+3. **Drag and drop** your `game_slot.bin` file onto the emulator window
+4. **The game will automatically load and run**
+
+This allows you to quickly test your game logic, graphics, and gameplay without needing to upload to the physical device each time you make changes.
+
 ### Complete Example Workflow
 
 ```bash
