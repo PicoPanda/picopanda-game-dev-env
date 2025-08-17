@@ -43,34 +43,49 @@ def resolve_enums_in_lua(lua_code, enum_mappings):
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(
-        description="Create a PicoPanda game slot binary from Lua script and sprite sheet",
+        description="Create a PicoPanda game slot binary from Lua script and graphics binary",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s game.lua game_slot.bin
-  %(prog)s game.lua game_slot.bin sprites.bin
+  %(prog)s --script game.lua --output game_slot.bin
+  %(prog)s --script game.lua --output game_slot.bin --graphics graphics.bin
+  %(prog)s -s game.lua -o game_slot.bin -g graphics.bin
   %(prog)s -h
 
 The script creates a 128KB binary file containing:
 - 4-byte Lua script length
 - Lua script data (with enums resolved to numeric values)
-- 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
+- Graphics binary (consisting of):
+  * 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
+  * 8192-byte tile map (128x64 tiles, 1 byte per tile)
+  * 256-byte sprite flags (1 byte per sprite, 8 flags per byte)
 - Padding to fill 128KB slot
         """
     )
     
-    parser.add_argument("script", help="Input Lua script file")
-    parser.add_argument("output", help="Output binary file")
-    parser.add_argument("sprite_sheet", nargs="?", help="Input sprite sheet file (optional, creates default if not provided)")
+    # Required arguments
+    parser.add_argument("-s", "--script", required=True, 
+                       help="Input Lua script file")
+    parser.add_argument("-o", "--output", required=True, 
+                       help="Output binary file")
+    
+    # Optional arguments
+    parser.add_argument("-g", "--graphics", 
+                       help="Input graphics binary file (creates default if not provided)")
     
     args = parser.parse_args()
     
     script_path = args.script
     out_path = args.output
-    sprite_sheet_path = args.sprite_sheet
+    graphics_path = args.graphics
     slot_size = 0x20000  # 128KB
-    SPRITE_SHEET_SIZE = 8192  # 128x128 pixels at 4 bits per pixel
-
+    
+    # Graphics binary section sizes
+    SPRITE_SHEET_SIZE = 8192      # 128x128 pixels at 4 bits per pixel
+    TILE_MAP_SIZE = 8192          # 128x64 tiles, 1 byte per tile
+    SPRITE_FLAGS_SIZE = 256       # 256 sprites, 1 byte per sprite
+    GRAPHICS_BINARY_SIZE = SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE  # 16,640 bytes
+    
     # Extract enum mappings from the API file
     api_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "picopanda_api.lua")
     enum_mappings = extract_enums_from_api(api_file_path)
@@ -85,21 +100,27 @@ The script creates a 128KB binary file containing:
     # Convert to bytes for binary output
     lua_data = lua_code.encode('utf-8')
 
-    # Read the sprite sheet if provided
-    sprite_data = None
-    if sprite_sheet_path and os.path.exists(sprite_sheet_path):
-        with open(sprite_sheet_path, "rb") as f:
-            sprite_data = f.read()
-            if len(sprite_data) != SPRITE_SHEET_SIZE:
-                print(f"Warning: Sprite sheet size is {len(sprite_data)} bytes, expected {SPRITE_SHEET_SIZE}")
+    # Read the graphics binary if provided
+    graphics_data = None
+    if graphics_path and os.path.exists(graphics_path):
+        with open(graphics_path, "rb") as f:
+            graphics_data = f.read()
+            if len(graphics_data) != GRAPHICS_BINARY_SIZE:
+                print(f"Warning: Graphics binary size is {len(graphics_data)} bytes, expected {GRAPHICS_BINARY_SIZE}")
+                print(f"Expected breakdown: {SPRITE_SHEET_SIZE} + {TILE_MAP_SIZE} + {SPRITE_FLAGS_SIZE} = {GRAPHICS_BINARY_SIZE}")
                 # Pad or truncate to correct size
-                if len(sprite_data) < SPRITE_SHEET_SIZE:
-                    sprite_data += b'\x00' * (SPRITE_SHEET_SIZE - len(sprite_data))
+                if len(graphics_data) < GRAPHICS_BINARY_SIZE:
+                    graphics_data += b'\x00' * (GRAPHICS_BINARY_SIZE - len(graphics_data))
+                    print(f"Padded graphics binary to {len(graphics_data)} bytes")
                 else:
-                    sprite_data = sprite_data[:SPRITE_SHEET_SIZE]
+                    graphics_data = graphics_data[:GRAPHICS_BINARY_SIZE]
+                    print(f"Truncated graphics binary to {len(graphics_data)} bytes")
     else:
-        # Create a default sprite sheet if none provided
-        print("No sprite sheet provided, creating default pattern")
+        # Create a default graphics binary if none provided
+        print("No graphics binary provided, creating default pattern")
+        
+        # Create default sprite sheet
+        print("  Creating default sprite sheet...")
         sprite_data = b''
         for i in range(SPRITE_SHEET_SIZE):
             # Create a simple alternating pattern
@@ -107,9 +128,20 @@ The script creates a 128KB binary file containing:
                 sprite_data += bytes([0x0F if i % 2 == 0 else 0xF0])
             else:
                 sprite_data += bytes([0xF0 if i % 2 == 0 else 0x0F])
+        
+        # Create default tile map (all transparent/empty tiles)
+        print("  Creating default tile map (all tiles transparent)...")
+        tile_map_data = b'\xFF' * TILE_MAP_SIZE  # 255 = transparent/empty
+        
+        # Create default sprite flags (all flags cleared)
+        print("  Creating default sprite flags (all flags cleared)...")
+        sprite_flags_data = b'\x00' * SPRITE_FLAGS_SIZE  # All flags set to 0
+        
+        # Combine all graphics sections
+        graphics_data = sprite_data + tile_map_data + sprite_flags_data
 
     # Calculate the total size needed
-    total_size = 4 + len(lua_data) + SPRITE_SHEET_SIZE
+    total_size = 4 + len(lua_data) + len(graphics_data)
 
     if total_size > slot_size:
         print(f"Error: Total size {total_size} exceeds slot size {slot_size}")
@@ -123,19 +155,26 @@ The script creates a 128KB binary file containing:
         # Write Lua script
         out.write(lua_data)
         
-        # Write sprite sheet
-        out.write(sprite_data)
+        # Write graphics binary (sprite sheet + tile map + sprite flags)
+        out.write(graphics_data)
         
         # Pad with 0xFF to 128KB
         padding_size = slot_size - total_size
         out.write(b'\xFF' * padding_size)
 
-    print(f"Created game slot binary:")
+    print(f"\nCreated game slot binary:")
     print(f"  Lua script: {len(lua_data)} bytes")
-    print(f"  Sprite sheet: {len(sprite_data)} bytes")
+    print(f"  Graphics binary: {len(graphics_data)} bytes")
+    print(f"    ├─ Sprite sheet: {SPRITE_SHEET_SIZE} bytes")
+    print(f"    ├─ Tile map: {TILE_MAP_SIZE} bytes")
+    print(f"    └─ Sprite flags: {SPRITE_FLAGS_SIZE} bytes")
     print(f"  Padding: {padding_size} bytes")
     print(f"  Total: {total_size} bytes")
+    print(f"\nMemory layout:")
+    print(f"  Lua script offset: 0x{4:08X}")
     print(f"  Sprite sheet offset: 0x{4 + len(lua_data):08X}")
+    print(f"  Tile map offset: 0x{4 + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
+    print(f"  Sprite flags offset: 0x{4 + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
 
 if __name__ == "__main__":
     main()
