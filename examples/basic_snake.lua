@@ -1,5 +1,7 @@
 -- Snake Game for PicoPanda - Basic Test Version
 -- Global variables
+
+local game_title = "SnakesOnAPlane"
 local snake = {}  -- Table to store all snake segments
 local direction_x = 1  -- Start moving right
 local direction_y = 0
