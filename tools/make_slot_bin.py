@@ -40,6 +40,30 @@ def resolve_enums_in_lua(lua_code, enum_mappings):
     
     return lua_code
 
+def extract_game_title(lua_code):
+    """Extract game title from Lua script"""
+    game_title = ""
+    
+    # Look for game_title variable declarations
+    # Support multiple quote styles: "title", 'title', [[title]]
+    patterns = [
+        r'game_title\s*=\s*["\']([^"\']+)["\']',  # "title" or 'title'
+        r'game_title\s*=\s*\[\[([^\]]+)\]\]',      # [[title]]
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, lua_code, re.IGNORECASE)
+        if match:
+            game_title = match.group(1).strip()
+            print(f"Found game title: '{game_title}'")
+            break
+    
+    if not game_title:
+        print("No game_title found in script, using default")
+        game_title = "Untitled Game"
+    
+    return game_title
+
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(
@@ -54,6 +78,7 @@ Examples:
 
 The script creates a 128KB binary file containing:
 - 4-byte Lua script length
+- 32-byte game title (null-terminated, padded with 0x00)
 - Lua script data (with enums resolved to numeric values)
 - Graphics binary (consisting of):
   * 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
@@ -80,6 +105,11 @@ The script creates a 128KB binary file containing:
     graphics_path = args.graphics
     slot_size = 0x20000  # 128KB
     
+    # Binary section sizes
+    SCRIPT_LENGTH_SIZE = 4
+    GAME_TITLE_SIZE = 32
+    HEADER_SIZE = SCRIPT_LENGTH_SIZE + GAME_TITLE_SIZE
+    
     # Graphics binary section sizes
     SPRITE_SHEET_SIZE = 8192      # 128x128 pixels at 4 bits per pixel
     TILE_MAP_SIZE = 8192          # 128x64 tiles, 1 byte per tile
@@ -94,11 +124,23 @@ The script creates a 128KB binary file containing:
     with open(script_path, "r", encoding="utf-8") as f:
         lua_code = f.read()
 
+    # Extract game title from the script
+    game_title = extract_game_title(lua_code)
+    
     # Resolve enums to numeric values
     lua_code = resolve_enums_in_lua(lua_code, enum_mappings)
     
     # Convert to bytes for binary output
     lua_data = lua_code.encode('utf-8')
+    
+    # Prepare game title data (32 bytes, null-terminated, padded with 0x00)
+    title_bytes = game_title.encode('utf-8')
+    if len(title_bytes) > GAME_TITLE_SIZE - 1:  # -1 for null terminator
+        title_bytes = title_bytes[:GAME_TITLE_SIZE - 1]
+        print(f"Warning: Game title truncated to '{title_bytes.decode('utf-8')}'")
+    
+    # Pad title to exactly 32 bytes
+    title_data = title_bytes + b'\x00' + b'\x00' * (GAME_TITLE_SIZE - len(title_bytes) - 1)
 
     # Read the graphics binary if provided
     graphics_data = None
@@ -141,7 +183,7 @@ The script creates a 128KB binary file containing:
         graphics_data = sprite_data + tile_map_data + sprite_flags_data
 
     # Calculate the total size needed
-    total_size = 4 + len(lua_data) + len(graphics_data)
+    total_size = HEADER_SIZE + len(lua_data) + len(graphics_data)
 
     if total_size > slot_size:
         print(f"Error: Total size {total_size} exceeds slot size {slot_size}")
@@ -151,6 +193,9 @@ The script creates a 128KB binary file containing:
     with open(out_path, "wb") as out:
         # Write Lua script length
         out.write(len(lua_data).to_bytes(4, "little"))
+        
+        # Write game title (32 bytes)
+        out.write(title_data)
         
         # Write Lua script
         out.write(lua_data)
@@ -164,6 +209,7 @@ The script creates a 128KB binary file containing:
 
     print(f"\nCreated game slot binary:")
     print(f"  Lua script: {len(lua_data)} bytes")
+    print(f"  Game title: '{game_title}' ({GAME_TITLE_SIZE} bytes)")
     print(f"  Graphics binary: {len(graphics_data)} bytes")
     print(f"    ├─ Sprite sheet: {SPRITE_SHEET_SIZE} bytes")
     print(f"    ├─ Tile map: {TILE_MAP_SIZE} bytes")
@@ -171,10 +217,12 @@ The script creates a 128KB binary file containing:
     print(f"  Padding: {padding_size} bytes")
     print(f"  Total: {total_size} bytes")
     print(f"\nMemory layout:")
-    print(f"  Lua script offset: 0x{4:08X}")
-    print(f"  Sprite sheet offset: 0x{4 + len(lua_data):08X}")
-    print(f"  Tile map offset: 0x{4 + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
-    print(f"  Sprite flags offset: 0x{4 + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
+    print(f"  Lua script length offset: 0x{0:08X}")
+    print(f"  Game title offset: 0x{SCRIPT_LENGTH_SIZE:08X}")
+    print(f"  Lua script offset: 0x{HEADER_SIZE:08X}")
+    print(f"  Sprite sheet offset: 0x{HEADER_SIZE + len(lua_data):08X}")
+    print(f"  Tile map offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
+    print(f"  Sprite flags offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
 
 if __name__ == "__main__":
     main()
