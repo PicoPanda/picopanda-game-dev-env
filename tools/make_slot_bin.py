@@ -63,6 +63,159 @@ def compile_lua_to_bytecode(lua_file, output_file=None, strip_debug=True):
         print("Install Lua: brew install lua (macOS) or apt-get install lua5.1 (Linux)")
         sys.exit(1)
 
+def find_require_and_dofile_calls(lua_code):
+    """Find all require() and dofile() calls in Lua code"""
+    dependencies = []
+    
+    # Pattern for require("module") or require('module')
+    require_pattern = r'require\s*\(\s*["\']([^"\']+)["\']\s*\)'
+    # Pattern for dofile("file.lua") or dofile('file.lua')
+    dofile_pattern = r'dofile\s*\(\s*["\']([^"\']+)["\']\s*\)'
+    
+    # Find all require calls
+    for match in re.finditer(require_pattern, lua_code):
+        module_path = match.group(1)
+        start_pos = match.start()
+        end_pos = match.end()
+        
+        # Check if there's an assignment before this require call
+        # Look backwards for "local var = " pattern
+        before_text = lua_code[max(0, start_pos-50):start_pos]
+        assignment_match = re.search(r'(local\s+\w+\s*=\s*)$', before_text)
+        assignment = assignment_match.group(1) if assignment_match else None
+        
+        if assignment:
+            # Include the assignment in the range
+            start_pos = start_pos - len(assignment)
+        
+        dependencies.append(('require', module_path, start_pos, end_pos, assignment))
+    
+    # Find all dofile calls
+    for match in re.finditer(dofile_pattern, lua_code):
+        file_path = match.group(1)
+        dependencies.append(('dofile', file_path, match.start(), match.end(), None))
+    
+    return dependencies
+
+def resolve_file_path(module_path, base_dir, script_path):
+    """Resolve a module/file path to an actual file path"""
+    script_dir = os.path.dirname(script_path)
+    possible_paths = []
+    
+    # If it's a require() call, try common Lua module resolution
+    if not module_path.endswith('.lua'):
+        # Try various path combinations
+        # 1. Direct path with .lua extension
+        possible_paths.append(os.path.join(base_dir, module_path + '.lua'))
+        # 2. Dot notation converted to path separators
+        possible_paths.append(os.path.join(base_dir, module_path.replace('.', os.sep) + '.lua'))
+        # 3. In a subdirectory
+        possible_paths.append(os.path.join(base_dir, module_path, 'init.lua'))
+        # 4. Relative to script directory
+        possible_paths.append(os.path.join(script_dir, module_path + '.lua'))
+        possible_paths.append(os.path.join(script_dir, module_path.replace('.', os.sep) + '.lua'))
+    else:
+        # It's already a file path
+        possible_paths.append(os.path.join(base_dir, module_path))
+        possible_paths.append(os.path.join(script_dir, module_path))
+        # Try relative path
+        if not os.path.isabs(module_path):
+            possible_paths.append(os.path.join(os.getcwd(), module_path))
+    
+    # Try each possible path
+    for path in possible_paths:
+        abs_path = os.path.abspath(path)
+        if os.path.exists(abs_path):
+            return abs_path
+    
+    # Not found
+    return None
+
+def bundle_lua_files(script_path, visited=None):
+    """Recursively bundle Lua files, inlining require() and dofile() calls"""
+    if visited is None:
+        visited = set()
+    
+    script_path = os.path.abspath(script_path)
+    
+    # Check for circular dependencies
+    if script_path in visited:
+        print(f"Warning: Circular dependency detected for {script_path}, skipping")
+        return ""
+    
+    visited.add(script_path)
+    
+    # Read the file
+    try:
+        with open(script_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except FileNotFoundError:
+        print(f"Error: File not found: {script_path}")
+        return ""
+    
+    base_dir = os.path.dirname(script_path)
+    
+    # Find all require() and dofile() calls
+    dependencies = find_require_and_dofile_calls(content)
+    
+    if not dependencies:
+        # No dependencies, return content as-is
+        return content
+    
+    # Process dependencies in reverse order to maintain correct replacement positions
+    dependencies.sort(key=lambda x: x[2], reverse=True)
+    
+    bundled_content = content
+    for dep_info in dependencies:
+        if len(dep_info) == 5:
+            dep_type, module_path, start_pos, end_pos, assignment = dep_info
+        else:
+            # Backward compatibility
+            dep_type, module_path, start_pos, end_pos = dep_info
+            assignment = None
+        
+        # Resolve the file path
+        file_path = resolve_file_path(module_path, base_dir, script_path)
+        
+        if file_path and os.path.exists(file_path):
+            print(f"  Bundling {dep_type}: {module_path} -> {file_path}")
+            # Recursively bundle the dependency
+            bundled_dep = bundle_lua_files(file_path, visited.copy())
+            
+            # Check if the bundled file returns a module (has a return statement)
+            has_return = bool(re.search(r'\breturn\s+', bundled_dep.strip(), re.MULTILINE))
+            
+            if assignment:
+                # There's an assignment like "local x = require(...)"
+                var_match = re.search(r'local\s+(\w+)\s*=', assignment)
+                var_name = var_match.group(1) if var_match else None
+                
+                if has_return:
+                    # File returns a module, wrap it to capture the return value
+                    replacement = f"\n-- Begin bundled: {os.path.basename(file_path)}\nlocal {var_name} = (function()\n{bundled_dep}\nend)()\n-- End bundled: {os.path.basename(file_path)}\n"
+                else:
+                    # File doesn't return a module
+                    # Inline the content and create an empty module table
+                    # Functions will be in global scope, but we create the table for compatibility
+                    replacement = f"\n-- Begin bundled: {os.path.basename(file_path)}\n{bundled_dep}\nlocal {var_name} = {{}}\n-- Note: Functions from {os.path.basename(file_path)} are in global scope\n-- End bundled: {os.path.basename(file_path)}\n"
+                # Remove the entire assignment line
+                bundled_content = bundled_content[:start_pos] + replacement + bundled_content[end_pos:]
+            else:
+                # No assignment, just replace the require/dofile call
+                # Wrap in a do...end block to create a local scope
+                replacement = f"\n-- Begin bundled: {os.path.basename(file_path)}\ndo\n{bundled_dep}\nend\n-- End bundled: {os.path.basename(file_path)}\n"
+                bundled_content = bundled_content[:start_pos] + replacement + bundled_content[end_pos:]
+        else:
+            print(f"Warning: Could not resolve {dep_type} '{module_path}' in {script_path}")
+            # Remove the require/dofile call (comment it out)
+            if assignment:
+                # Remove the entire assignment line
+                bundled_content = bundled_content[:start_pos] + f"-- require/dofile not found: {module_path}\n" + bundled_content[end_pos:]
+            else:
+                bundled_content = bundled_content[:start_pos] + f"-- require/dofile not found: {module_path}\n" + bundled_content[end_pos:]
+    
+    return bundled_content
+
 def extract_game_title(lua_code):
     """Extract game title from Lua script"""
     game_title = ""
@@ -102,7 +255,7 @@ Examples:
 The script creates a 128KB binary file containing:
 - 4-byte Lua script length
 - 32-byte game title (null-terminated, padded with 0x00)
-- Lua bytecode data (compiled from source with enums resolved)
+- Lua bytecode data (bundled from multiple files, enums resolved, then compiled)
 - Graphics binary (consisting of):
   * 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
   * 8192-byte tile map (128x64 tiles, 1 byte per tile)
@@ -145,11 +298,16 @@ The script creates a 128KB binary file containing:
     
     # Read the Lua source file
     print(f"Reading Lua source: {script_path}")
-    with open(script_path, "r", encoding="utf-8") as f:
-        lua_code = f.read()
+    script_path = os.path.abspath(script_path)
     
-    # Extract game title from the script
-    game_title = extract_game_title(lua_code)
+    # Extract game title from the original script (before bundling)
+    with open(script_path, "r", encoding="utf-8") as f:
+        original_code = f.read()
+    game_title = extract_game_title(original_code)
+    
+    # Bundle all Lua files (resolve require() and dofile() calls)
+    print("Bundling Lua files...")
+    lua_code = bundle_lua_files(script_path)
     
     # Resolve enums to numeric values
     print("Resolving enum constants...")

@@ -15,6 +15,7 @@ local screen_width = 128
 local screen_height = 128
 local grid_width = screen_width / grid_size
 local grid_height = screen_height / grid_size
+local testing = require("testing")
 
 function game_logic_init()
     -- Initialize snake (start in middle, 3 segments long)
@@ -33,6 +34,8 @@ function game_logic_init()
     
     -- Spawn initial food
     spawn_food()
+
+
     
     print("Snake game initialized!")
     print("Snake head at: " .. snake[1].x .. "," .. snake[1].y)
@@ -41,7 +44,8 @@ end
 function game_logic_loop()
     -- Handle input (always check for input)
     local buttons = get_button_status()
-    
+
+
     if game_over then
         -- Check for restart
         if buttons.up_pressed or buttons.down_pressed or 
@@ -152,6 +156,8 @@ end
 function draw_game()
     -- Clear screen (draw black background)
     draw_rectangle(0, 0, screen_width, screen_height, true, 0x00)
+
+    testing.testing_init()
     
     -- Draw snake segments
     for i = 1, #snake do
