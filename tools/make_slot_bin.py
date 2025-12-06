@@ -3,6 +3,8 @@ import sys
 import os
 import argparse
 import re
+import subprocess
+import tempfile
 
 def extract_enums_from_api(api_file_path):
     """Extract enum mappings from picopanda_api.lua file"""
@@ -39,6 +41,27 @@ def resolve_enums_in_lua(lua_code, enum_mappings):
         lua_code = re.sub(pattern, numeric_value, lua_code)
     
     return lua_code
+
+def compile_lua_to_bytecode(lua_file, output_file=None, strip_debug=True):
+    """Compile Lua source to bytecode using luac"""
+    if output_file is None:
+        output_file = lua_file.replace('.lua', '.luac')
+    
+    cmd = ['luac']
+    if strip_debug:
+        cmd.append('-s')
+    cmd.extend(['-o', output_file, lua_file])
+    
+    try:
+        subprocess.run(cmd, check=True)
+        return output_file
+    except subprocess.CalledProcessError as e:
+        print(f"Error compiling Lua file: {e}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: luac not found. Make sure Lua is installed and in your PATH.")
+        print("Install Lua: brew install lua (macOS) or apt-get install lua5.1 (Linux)")
+        sys.exit(1)
 
 def extract_game_title(lua_code):
     """Extract game title from Lua script"""
@@ -79,7 +102,7 @@ Examples:
 The script creates a 128KB binary file containing:
 - 4-byte Lua script length
 - 32-byte game title (null-terminated, padded with 0x00)
-- Lua script data (with enums resolved to numeric values)
+- Lua bytecode data (compiled from source with enums resolved)
 - Graphics binary (consisting of):
   * 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
   * 8192-byte tile map (128x64 tiles, 1 byte per tile)
@@ -119,19 +142,42 @@ The script creates a 128KB binary file containing:
     # Extract enum mappings from the API file
     api_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "picopanda_api.lua")
     enum_mappings = extract_enums_from_api(api_file_path)
-
-    # Read the Lua script as text first
+    
+    # Read the Lua source file
+    print(f"Reading Lua source: {script_path}")
     with open(script_path, "r", encoding="utf-8") as f:
         lua_code = f.read()
-
+    
     # Extract game title from the script
     game_title = extract_game_title(lua_code)
     
     # Resolve enums to numeric values
+    print("Resolving enum constants...")
     lua_code = resolve_enums_in_lua(lua_code, enum_mappings)
     
-    # Convert to bytes for binary output
-    lua_data = lua_code.encode('utf-8')
+    # Write resolved code to temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False) as tmp_file:
+        tmp_file.write(lua_code)
+        tmp_file_path = tmp_file.name
+    
+    # Create temporary file for bytecode output
+    with tempfile.NamedTemporaryFile(suffix='.luac', delete=False) as tmp_bytecode:
+        bytecode_file = tmp_bytecode.name
+    
+    try:
+        # Compile to bytecode
+        print("Compiling to bytecode...")
+        compile_lua_to_bytecode(tmp_file_path, bytecode_file, strip_debug=True)
+        
+        # Read the compiled bytecode
+        with open(bytecode_file, "rb") as f:
+            lua_data = f.read()
+    finally:
+        # Clean up temporary files
+        if os.path.exists(tmp_file_path):
+            os.unlink(tmp_file_path)
+        if os.path.exists(bytecode_file):
+            os.unlink(bytecode_file)
     
     # Prepare game title data (32 bytes, null-terminated, padded with 0x00)
     title_bytes = game_title.encode('utf-8')
@@ -207,8 +253,8 @@ The script creates a 128KB binary file containing:
         padding_size = slot_size - total_size
         out.write(b'\xFF' * padding_size)
 
-    print(f"\nCreated game slot binary:")
-    print(f"  Lua script: {len(lua_data)} bytes")
+    print("\nCreated game slot binary:")
+    print(f"  Lua bytecode: {len(lua_data)} bytes")
     print(f"  Game title: '{game_title}' ({GAME_TITLE_SIZE} bytes)")
     print(f"  Graphics binary: {len(graphics_data)} bytes")
     print(f"    ├─ Sprite sheet: {SPRITE_SHEET_SIZE} bytes")
@@ -216,10 +262,10 @@ The script creates a 128KB binary file containing:
     print(f"    └─ Sprite flags: {SPRITE_FLAGS_SIZE} bytes")
     print(f"  Padding: {padding_size} bytes")
     print(f"  Total: {total_size} bytes")
-    print(f"\nMemory layout:")
-    print(f"  Lua script length offset: 0x{0:08X}")
+    print("\nMemory layout:")
+    print(f"  Lua bytecode length offset: 0x{0:08X}")
     print(f"  Game title offset: 0x{SCRIPT_LENGTH_SIZE:08X}")
-    print(f"  Lua script offset: 0x{HEADER_SIZE:08X}")
+    print(f"  Lua bytecode offset: 0x{HEADER_SIZE:08X}")
     print(f"  Sprite sheet offset: 0x{HEADER_SIZE + len(lua_data):08X}")
     print(f"  Tile map offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
     print(f"  Sprite flags offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
