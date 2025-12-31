@@ -254,13 +254,18 @@ Examples:
   %(prog)s -h
 
 The script creates a 128KB binary file containing:
-- 4-byte Lua script length
+- 16-byte header consisting of
+  * 4 bytes containing the scripy length in little endian.
+  * 12 bytes for future use.
 - 32-byte game title (null-terminated, padded with 0x00)
 - Lua bytecode data (bundled from multiple files, enums resolved, then compiled)
 - Graphics binary (consisting of):
   * 8192-byte sprite sheet (128x128 pixels, 4-bit greyscale)
   * 8192-byte tile map (128x64 tiles, 1 byte per tile)
   * 256-byte sprite flags (1 byte per sprite, 8 flags per byte)
+- Audio data consisting of:
+  * 8192 bytes of note data: all the notes to be used by the phrases.
+  * 768 bytes of phrase data: ticks per note, loop start, loop end.
 - Padding to fill 128KB slot
         """
     )
@@ -286,9 +291,8 @@ The script creates a 128KB binary file containing:
     slot_size = 0x20000  # 128KB
     
     # Binary section sizes
-    SCRIPT_LENGTH_SIZE = 4
+    HEADER_SIZE = 16
     GAME_TITLE_SIZE = 32
-    HEADER_SIZE = SCRIPT_LENGTH_SIZE + GAME_TITLE_SIZE
     
     # Graphics binary section sizes
     SPRITE_SHEET_SIZE = 8192      # 128x128 pixels at 4 bits per pixel
@@ -297,7 +301,7 @@ The script creates a 128KB binary file containing:
     GRAPHICS_BINARY_SIZE = SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE  # 16,640 bytes
     AUDIO_PHRASE_DATA_SIZE = 768
     AUDIO_NOTE_DATA_SIZE = 8192
-    AUDIO_BINARY_SIZE =  AUDIO_NOTE_DATA_SIZE + AUDIO_PHRASE_DATA_SIZE
+    AUDIO_BINARY_SIZE = AUDIO_NOTE_DATA_SIZE + AUDIO_PHRASE_DATA_SIZE
     
     # Extract enum mappings from the API file
     api_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "picopanda_api.lua")
@@ -336,7 +340,16 @@ The script creates a 128KB binary file containing:
         
         # Read the compiled bytecode
         with open(bytecode_file, "rb") as f:
-            lua_data = f.read()
+            lua_data = bytearray()
+            lua_data += f.read()
+            # Pad lua data to the a 16 byte whole number.
+            print("lua_data size: {:d}".format(len(lua_data)))
+            remainder = (len(lua_data) % 16)
+            if(remainder != 0):
+                pad_amount = (16 - remainder)
+                print("Padding lua_data with {:d} bytes".format(pad_amount))
+                lua_data += b'\xff' * pad_amount
+                print("lua_data with padding: {:d}".format(len(lua_data)))
     finally:
         # Clean up temporary files
         if os.path.exists(tmp_file_path):
@@ -344,6 +357,11 @@ The script creates a 128KB binary file containing:
         if os.path.exists(bytecode_file):
             os.unlink(bytecode_file)
     
+    # Prepare header data. 16 bytes at the moment.
+    header_data = bytearray()
+    header_data += len(lua_data).to_bytes(4, "little")
+    header_data += b'\xff' * 12
+
     # Prepare game title data (32 bytes, null-terminated, padded with 0x00)
     title_bytes = game_title.encode('utf-8')
     if len(title_bytes) > GAME_TITLE_SIZE - 1:  # -1 for null terminator
@@ -424,7 +442,7 @@ The script creates a 128KB binary file containing:
 
 
     # Calculate the total size needed
-    total_size = HEADER_SIZE + len(lua_data) + len(graphics_data) + len(audio_data)
+    total_size = HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data) + len(graphics_data) + len(audio_data)
 
     if total_size > slot_size:
         print(f"Error: Total size {total_size} exceeds slot size {slot_size}")
@@ -432,8 +450,8 @@ The script creates a 128KB binary file containing:
 
     # Write the binary
     with open(out_path, "wb") as out:
-        # Write Lua script length
-        out.write(len(lua_data).to_bytes(4, "little"))
+        # Write header
+        out.write(header_data)
         
         # Write game title (32 bytes)
         out.write(title_data)
@@ -465,13 +483,13 @@ The script creates a 128KB binary file containing:
     print(f"  Total: {total_size} bytes")
     print("\nMemory layout:")
     print(f"  Lua bytecode length offset: 0x{0:08X}")
-    print(f"  Game title offset: 0x{SCRIPT_LENGTH_SIZE:08X}")
-    print(f"  Lua bytecode offset: 0x{HEADER_SIZE:08X}")
-    print(f"  Sprite sheet offset: 0x{HEADER_SIZE + len(lua_data):08X}")
-    print(f"  Tile map offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
-    print(f"  Sprite flags offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
-    print(f"  Note data offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE:08X}")
-    print(f"  Phrase data offset: 0x{HEADER_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE + AUDIO_NOTE_DATA_SIZE:08X}")
+    print(f"  Game title offset: 0x{HEADER_SIZE:08X}")
+    print(f"  Lua bytecode offset: 0x{(HEADER_SIZE + GAME_TITLE_SIZE):08X}")
+    print(f"  Sprite sheet offset: 0x{HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data):08X}")
+    print(f"  Tile map offset: 0x{HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data) + SPRITE_SHEET_SIZE:08X}")
+    print(f"  Sprite flags offset: 0x{HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE:08X}")
+    print(f"  Note data offset: 0x{HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE:08X}")
+    print(f"  Phrase data offset: 0x{HEADER_SIZE + GAME_TITLE_SIZE + len(lua_data) + SPRITE_SHEET_SIZE + TILE_MAP_SIZE + SPRITE_FLAGS_SIZE + AUDIO_NOTE_DATA_SIZE:08X}")
 
 if __name__ == "__main__":
     main()

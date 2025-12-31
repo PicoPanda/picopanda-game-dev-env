@@ -45,6 +45,9 @@ class Sfx:
     Python class for holding the data of a pico-8 sound effect.
     """
 
+    LINE_LENGTH = 168
+    NOTE_AMOUNT = 32
+
     def __init__(self, index):
         self.index = index
         self.settings = 0
@@ -72,3 +75,95 @@ class Sfx:
             self.notes.append(n)
             stringPos = stringPos + 5
 
+class SpriteSheet:
+    """
+    Python class for holding the data of a pico-8 sprite sheet.
+    """
+
+    LINE_LENGTH = 128
+
+    def __init__(self):
+        self.lines = 0
+        self.pixelArray = []
+
+    def __str__(self):
+        retString = ""
+        for b in range(len(self.pixelArray)):
+            if((b != 0) and ((b % 128) == 0)):
+                retString += "\n"
+            retString += "{:01X}".format(self.pixelArray[b])
+        return retString
+
+    def addLine(self, hexString):
+        if(type(hexString).__name__ == 'str'):
+            if(len(hexString) == 128):
+                self.lines += 1
+                for b in range(len(hexString)):
+                    self.pixelArray.append(int(hexString[b], 16))
+            else:
+                raise ValueError("hexString must be 128 characters long")
+        else:
+            raise TypeError("hexString must be a string type")
+
+
+class SpriteFlags:
+    """
+    Python class for holding the data of a pico-8 sprite flags.
+    """
+    
+    LINE_LENGTH = 256
+    LINE_AMOUNT = 2
+
+    def __init__(self):
+        self.lines = 0
+        self.flagArray = []
+
+    def __str__(self):
+        retString = ""
+        for b in range(len(self.flagArray)):
+            if((b != 0) and ((b % 128) == 0)):
+                retString += "\n"
+            retString += "{:02X}".format(self.flagArray[b])
+        return retString
+    
+    def addLine(self, hexString):
+        if(type(hexString).__name__ == 'str'):
+            if(len(hexString) == 256):
+                self.lines += 1
+                for b in range(0, len(hexString), 2):
+                    self.flagArray.append(int(hexString[b:(b+2)], 16))
+            else:
+                raise ValueError("hexString must be 256 characters long")
+        else:
+            raise TypeError("hexString must be a string type")
+        
+class TileMap:
+    """
+    Python class for holding the data of a pico-8 tile map.
+    """
+    
+    LINE_LENGTH = 256
+
+    def __init__(self):
+        self.lines = 0
+        self.tileArray = []
+
+    def __str__(self):
+        retString = ""
+        for b in range(len(self.tileArray)):
+            if((b != 0) and ((b % 128) == 0)):
+                retString += "\n"
+            retString += "{:02X}".format(self.tileArray[b])
+        return retString
+
+    def addLine(self, hexString):
+        if(type(hexString).__name__ == 'str'):
+            if(len(hexString) == 256):
+                self.lines += 1
+                for b in range(0, len(hexString), 2):
+                    self.tileArray.append(int(hexString[b:(b+2)], 16))
+            else:
+                raise ValueError("hexString must be 256 characters long")
+        else:
+            raise TypeError("hexString must be a string type")
+        

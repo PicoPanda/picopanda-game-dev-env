@@ -56,7 +56,7 @@ class Note:
     def initFromPico8Params(self, note, octave, instrument, volume, effect):
         if(volume != 0):
             self.note = note
-            self.octave = octave
+            self.octave = octave + 2
             self.instrument = self.p8ToPpMap_instrument[instrument]
             self.volumeLeft = volume
             self.volumeRight = volume
@@ -105,4 +105,47 @@ class Phrase:
         ba = bytearray()
         for note in self.notes:
             ba += note.toByteArray()
+        return ba
+
+class SpriteSheet:
+    """
+    Python class for holding the data of a pico-8 sprite sheet.
+    """
+
+    PIXEL_AMOUNT = 16384
+
+    def __init__(self):
+        self.paletteMap = [15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        self.pixelArray = []
+
+    def __str__(self):
+        retString = ""
+        for n in range(0, len(self.pixelArray), 2):
+            if((n != 0) and ((n % 32) == 0)):
+                retString += "\n"
+            retString += "{:01X}{:01X} ".format(self.pixelArray[n], self.pixelArray[n+1])
+        
+        retString += "\n"
+        return retString
+
+    def initFromPico8PixelArray(self, pixelArray: list[int]):
+        for pixel in pixelArray:
+            p = pixel & 0x0F
+            self.pixelArray.append(self.paletteMap[p])
+
+        # Make sure the pixel array is a multiple of 2.
+        if((len(self.pixelArray) % 2) != 0):
+            self.pixelArray.append(self.paletteMap[0])
+
+    def pixelArrayToByteArray(self, fill=True):
+        ba = bytearray()
+        for n in range(0, len(self.pixelArray), 2):
+            pixelPair = self.pixelArray[n] + (self.pixelArray[n+1] << 4)
+            ba += bytearray(pixelPair.to_bytes(1, "little"))
+        
+        if(fill):
+            for n in range(len(self.pixelArray), self.PIXEL_AMOUNT, 2):
+                pixelPair = self.paletteMap[0] + (self.paletteMap[0]  << 4)
+                ba += bytearray(pixelPair.to_bytes(1, "little"))
+
         return ba

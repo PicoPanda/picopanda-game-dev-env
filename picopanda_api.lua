@@ -127,6 +127,16 @@ function set_camera_offset(x, y) end
 ---@return number y The current y pixel offset
 function get_camera_offset() end
 
+---Play a phrase
+---@return number index The index of the phrase to play
+---@return number channel The channel on which to play the phrase (optional), available channel if ommitted or nagative.
+function phrase_play() end
+
+---Stop a phrase
+---@return number index The index of the phrase to stop, negative to disregard phrase and just stop the selected audio channels.
+---@return number channel The channel on which to play the phrase (optional), all channels if ommitted or nagative.
+function phrase_stop() end
+
 -- Game lifecycle functions (these should be defined in your game script)
 
 ---Called once when the game starts
