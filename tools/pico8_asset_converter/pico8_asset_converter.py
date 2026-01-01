@@ -143,6 +143,10 @@ def extractPico8SpriteFlags(filePathObject):
     
     return pico8_spriteFlags
 
+def createPicoPandaSpriteFlags(pico8_spriteFlags: pico8.SpriteFlags) -> picopanda.SpriteFlags:
+    picopanda_spriteFlags = picopanda.SpriteFlags()
+    picopanda_spriteFlags.initFromPico8FlagsArray(pico8_spriteFlags.flagsArray)
+    return picopanda_spriteFlags
 
 def extractPico8TileMap(filePathObject):
     # Extract the pico8 sfx.
@@ -173,6 +177,12 @@ def extractPico8TileMap(filePathObject):
                     break
     
     return pico8_tileMap
+
+def createPicoPandaTileMap(pico8_tileMap: pico8.TileMap) -> picopanda.TileMap:
+    picopanda_tileMap = picopanda.TileMap()
+    picopanda_tileMap.initFromPico8TileArray(pico8_tileMap.tileArray)
+    return picopanda_tileMap
+
 
 if __name__ == "__main__":
     # Set up argument parser
@@ -212,11 +222,21 @@ if __name__ == "__main__":
                 # Extract and convert the graphics if selected.
                 if(args.graphics):
                     pico8_spriteSheet = extractPico8SpriteSheet(pico8_filePath)
-                    #print(pico8_spriteSheet)
+                    pico8_spriteFlags = extractPico8SpriteFlags(pico8_filePath)
+                    pico8_tileMap = extractPico8TileMap(pico8_filePath)
+
                     picopanda_spriteSheet = createPicoPandaSpriteSheet(pico8_spriteSheet)
-                    print(picopanda_spriteSheet.pixelArrayToByteArray())
-                    # pico8_spriteFlags = extractPico8SpriteFlags(pico8_filePath)
-                    # pico8_tileMap = extractPico8TileMap(pico8_filePath)
+                    picopanda_spriteFlags = createPicoPandaSpriteFlags(pico8_spriteFlags)
+                    picopanda_tileMap = createPicoPandaTileMap(pico8_tileMap)
+
+                    # Create the binary file with the graphics data.
+                    picopanda_graphicsFile = pico8_filePath.stem + "_pp_graphics.bin"
+                    with open(picopanda_graphicsFile, "wb") as f:
+                        f.write(picopanda_spriteSheet.toByteArray())
+                        f.write(picopanda_tileMap.toByteArray())
+                        f.write(picopanda_spriteFlags.toByteArray())
+                    
+                    print("Created {:s}".format(picopanda_graphicsFile))
 
                 # Extract and convert the sound effects if selected.
                 if(args.sfx):
@@ -228,6 +248,8 @@ if __name__ == "__main__":
                     picopanda_audioFile = pico8_filePath.stem + "_pp_audio.bin"
                     with open(picopanda_audioFile, "wb") as f:
                         f.write(noteAndPhraseData)
+
+                    print("Created {:s}".format(picopanda_audioFile))
 
             else:
                 parser.error("Cannot find a file named {:s}".format(args.input))

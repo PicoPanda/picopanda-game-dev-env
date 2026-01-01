@@ -116,14 +116,14 @@ class SpriteFlags:
 
     def __init__(self):
         self.lines = 0
-        self.flagArray = []
+        self.flagsArray = []
 
     def __str__(self):
         retString = ""
-        for b in range(len(self.flagArray)):
+        for b in range(len(self.flagsArray)):
             if((b != 0) and ((b % 128) == 0)):
                 retString += "\n"
-            retString += "{:02X}".format(self.flagArray[b])
+            retString += "{:02X}".format(self.flagsArray[b])
         return retString
     
     def addLine(self, hexString):
@@ -131,7 +131,7 @@ class SpriteFlags:
             if(len(hexString) == 256):
                 self.lines += 1
                 for b in range(0, len(hexString), 2):
-                    self.flagArray.append(int(hexString[b:(b+2)], 16))
+                    self.flagsArray.append(int(hexString[b:(b+2)], 16))
             else:
                 raise ValueError("hexString must be 256 characters long")
         else:

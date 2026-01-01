@@ -115,7 +115,10 @@ class SpriteSheet:
     PIXEL_AMOUNT = 16384
 
     def __init__(self):
-        self.paletteMap = [15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        # In order of luminoscity
+        #self.paletteMap = [0, 1, 2, 5, 6, 4, 12, 15, 3, 10, 14, 11, 8, 7, 9, 13]
+        # Custom.
+        self.paletteMap = [15, 1, 2, 4, 5, 0, 11, 14, 3, 9, 13, 10, 7, 6, 8, 12]
         self.pixelArray = []
 
     def __str__(self):
@@ -137,7 +140,7 @@ class SpriteSheet:
         if((len(self.pixelArray) % 2) != 0):
             self.pixelArray.append(self.paletteMap[0])
 
-    def pixelArrayToByteArray(self, fill=True):
+    def toByteArray(self, fill=True):
         ba = bytearray()
         for n in range(0, len(self.pixelArray), 2):
             pixelPair = self.pixelArray[n] + (self.pixelArray[n+1] << 4)
@@ -147,5 +150,77 @@ class SpriteSheet:
             for n in range(len(self.pixelArray), self.PIXEL_AMOUNT, 2):
                 pixelPair = self.paletteMap[0] + (self.paletteMap[0]  << 4)
                 ba += bytearray(pixelPair.to_bytes(1, "little"))
+
+        return ba
+
+class SpriteFlags:
+    """
+    Python class for holding the data of a picopanda sprite flags.
+    """
+    
+    FLAGS_AMOUNT = 256
+
+    def __init__(self):
+        self.flagsArray = []
+
+    def __str__(self):
+        retString = ""
+        for b in range(len(self.flagsArray)):
+            if((b != 0) and ((b % 16) == 0)):
+                retString += "\n"
+            retString += "{:02X} ".format(self.flagsArray[b])
+        return retString
+    
+    def initFromPico8FlagsArray(self, flagsArray: list[int]):
+        for flagByte in flagsArray:
+            self.flagsArray.append(flagByte)
+
+    def toByteArray(self, fill=True):
+        ba = bytearray()
+        for n in range(len(self.flagsArray)):
+            flagByte = (self.flagsArray[n] & 0xFF)
+            ba += bytearray(flagByte.to_bytes(1, "little"))
+        
+        if(fill):
+            flagByte = 0
+            for n in range(len(self.flagsArray), self.FLAGS_AMOUNT):
+                ba += bytearray(flagByte.to_bytes(1, "little"))
+
+        return ba
+
+class TileMap:
+    """
+    Python class for holding the data of a picopanda tile map.
+    """
+    
+    MAP_WIDTH = 128
+    MAP_HEIGHT = 64
+    TILE_AMOUNT = MAP_WIDTH * MAP_HEIGHT
+
+    def __init__(self):
+        self.tileArray = []
+
+    def __str__(self):
+        retString = ""
+        for b in range(len(self.tileArray)):
+            if((b != 0) and ((b % 16) == 0)):
+                retString += "\n"
+            retString += "{:02X} ".format(self.tileArray[b])
+        return retString
+
+    def initFromPico8TileArray(self, tileArray: list[int]):
+        for tile in tileArray:
+            self.tileArray.append(tile)
+
+    def toByteArray(self, fill=True):
+        ba = bytearray()
+        for n in range(len(self.tileArray)):
+            tile = (self.tileArray[n] & 0xFF)
+            ba += bytearray(tile.to_bytes(1, "little"))
+        
+        if(fill):
+            tile = 0
+            for n in range(len(self.tileArray), self.TILE_AMOUNT):
+                ba += bytearray(tile.to_bytes(1, "little"))
 
         return ba
