@@ -1,5 +1,8 @@
+game_title = "Pico8AssetTest_WM"
 flip_x = false
 flip_y = false
+map_x = 0
+map_y = 0
 
 function game_logic_init()
 
@@ -24,7 +27,17 @@ function game_logic_loop()
         flip_x = false
     end
 
-    draw_map(0, 0, 0, 0, 16, 16, 0)
+    draw_map(map_x, map_y, map_x*8, map_y*8, 4, 1, 0)
+    
+    map_x = map_x + 4
+    if(map_x > 15) then
+        map_x = 0
+    end
+
+    map_y = map_y + 1
+    if(map_y > 15) then
+        map_y = 0
+    end
     draw_sprite(PIXELS_8x8, 17, 60, 60, 1, 1, flip_x, flip_y)
 
     --[[
