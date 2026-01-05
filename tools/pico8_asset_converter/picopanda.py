@@ -58,8 +58,8 @@ class Note:
             self.note = note
             self.octave = octave + 2
             self.instrument = self.p8ToPpMap_instrument[instrument]
-            self.volumeLeft = volume
-            self.volumeRight = volume
+            self.volumeLeft = int(round((volume * 10) / 7))
+            self.volumeRight = int(round((volume * 10) / 7))
             self.effect = self.p8ToPpMap_effect[effect]
 
     def toByteArray(self):

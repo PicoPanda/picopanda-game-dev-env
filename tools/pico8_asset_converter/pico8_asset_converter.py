@@ -191,9 +191,9 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
             Examples:
-            %(prog)s --input my_pico8_file.p8 --sprites
+            %(prog)s --input my_pico8_file.p8 --graphics
             %(prog)s --input my_pico8_file.p8 --sfx
-            %(prog)s --i my_pico8_file.p8 -s -x
+            %(prog)s --i my_pico8_file.p8 -g -x
         """
     )
 
