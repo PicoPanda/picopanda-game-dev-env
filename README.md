@@ -231,20 +231,27 @@ The exported graphics binary contains:
 ### Audio Capabilities
 Currently PicoPanda supports playback of phrases. A phrase consists of the following:
 - 32 notes, each represented by a 32 bit integer of which the fields are ase follows:
-    - **note[7:0]:** Reserved for future use.
-    - **note[11:8]:** Effect.
-    - **note[15:12]:** Right Volume.
-    - **note[19:16]:** Left Volume.
-    - **note[23:20]:** Instrument.
-    - **note[27:24]:** Octave.
-    - **note[31:28]:** Note.
+    - **note[7:0]:** Reserved for future use
+    - **note[11:8]:** Effect
+    - **note[15:12]:** Right Volume
+    - **note[19:16]:** Left Volume
+    - **note[23:20]:** Waveform (instrument)
+    - **note[27:24]:** Octave
+    - **note[31:28]:** Note
 - An 8-bit ticksPerNote value which sets the duration for the notes of the phrase.
-A tick is 8ms in length. Therefore, if the ticksPerNote value of the phrase is set
+Tick duration is 8ms. Therefore, if the ticksPerNote value of the phrase is set
 to 50, then each note in the phrase will be played for 400ms.
 - An 8-bit loopStart index which sets the note index within the phrase at which
-looping of the phrase will start.
+looping of the phrase must start.
 - An 8-bit loopEnd index which sets the note index within the phrase at which
-looping of the phrase will End.
+looping of the phrase must End.
+
+**Note:** Allowance is made for 256 phrases. The idea is to have a fixed note storage
+of 8kB, but then to allow some sort of configuration for phrase length. One can then
+decide to have 64 phrases of 32 notes each, 128 phrases of 16 notes each or 256
+phrases of 8 notes each. Or even split the note storage into sections with each
+section containing a different phrase length. Bottom line is, 256 indexes of phrase
+data will be enough.
 
 ### Audio Binary Format
 The game engine expects the audio information to be in the following binary format:
@@ -261,8 +268,8 @@ loopStart and loopEnd for phrase 0.
 Currently the only intuitive method of creating audio is to create the audio phrases
 with the SFX editor in PICO-8 fantasy console and then to convert them to the binary
 format expected by PicoPanda with the *pico8_asset_converter.py* script. Each PICO-8
-SFX corresponds to a PicoPanda Phrase. Not all functionality is supported yet, the
-show how PICO-8 values map to PicoPanda values.
+SFX corresponds to a PicoPanda Phrase. Not all PICO-8 functionality is supported yet,
+the tables below show how PICO-8 SFX values map to PicoPanda phrase values.
 
 #### Notes
 
@@ -311,7 +318,7 @@ show how PICO-8 values map to PicoPanda values.
 
 #### Instruments
 
-| Pico8 Instrument | Pico8 Value | PicoPanda Instrument | PicoPanda Value |
+| Pico8 Instrument | Pico8 Value | PicoPanda Waveform | PicoPanda Value |
 |------------|----|------------------|----|
 | Triangle   | 0  | Triangle         | 2  |
 | Tilted Saw | 1  | Tilted Saw       | 3  |
@@ -340,7 +347,7 @@ show how PICO-8 values map to PicoPanda values.
 
 ### Audio Conversion
 Use the *pico8_asset_converter.py* script to extract the audio. From the root directory
-of the repo the command will look like this:
+of the repo, the command will look like this:
 
 ```bash
 python ./tools/pic8_asset_converter/pico8_asset_converter.py --input path/to/my_pico8_file.p8 --sfx
@@ -352,7 +359,7 @@ or on windows
 python .\\tools\\pic8_asset_converter\\pico8_asset_converter.py --input path\\to\\my_pico8_file.p8 --sfx
 ```
 
-The script will then generate a file names *my_pico8_file_pp_audio.p8* which can be
+The script will then generate a file named *my_pico8_file_pp_audio.p8* which can be
 passed in to the *make_slot_bin.p8* script with the *--audio* option.
 
 ## Building and Uploading
