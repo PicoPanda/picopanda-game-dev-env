@@ -145,6 +145,38 @@ Gets the current camera offset.
 local cam_x, cam_y = get_camera_offset()
 ```
 
+### Audio Functions
+
+####  `phrase_play(index, channel)`
+Plays a phrase.<br>
+The channel parameter is optional, if it is omitted or is negative then an available
+channel is selected.
+
+```lua
+phrase_play(1) -- Play phrase 1 on an available channel.
+
+phrase_play(11, 3) -- Play phrase on channel 3.
+```
+
+####  `phrase_stop(index, channel)`
+Stops a phrase.<br>
+The index parameter can be negative, which causes any phrase on the selected channel
+stopped
+The channel parameter is optional, if it is omitted or is negative then the phrase
+is stopped on all channels on which it is being played.<br>
+
+
+```lua
+phrase_stop(1) -- Stop phrase 1 on all channels which are currently playing it.
+
+phrase_stop(11, 3) -- Stop phrase 11 on channel 3. Only effective if phrase 11 is currently being played on channel 3.
+
+phrase_stop(-1, 3) -- Stop audio on channel 3.
+
+phrase_stop(-1, -1) -- Stop audio on all channels.
+
+```
+
 ### Color Values
 
 The display uses 4-bit greyscale (16 shades):
@@ -163,7 +195,7 @@ The display uses 4-bit greyscale (16 shades):
 - `0x0C` - Extremely Bright White
 - `0x0D` - Nearly Pure White
 - `0x0E` - Almost Pure White
-- `0x0F` - Pure White
+- `0x0F` - Pure White (Currently used as the transparent colour)
 
 ## Display Specifications
 
@@ -194,6 +226,142 @@ The exported graphics binary contains:
 
 **Note:** Currently only 8x8 pixel sprites are supported. 16x16 and 32x32 sprite sizes are not yet implemented.
 
+## Audio
+
+### Audio Capabilities
+Currently PicoPanda supports playback of phrases. A phrase consists of the following:
+- 32 notes, each represented by a 32 bit integer of which the fields are ase follows:
+    - **note[7:0]:** Reserved for future use
+    - **note[11:8]:** Effect
+    - **note[15:12]:** Right Volume
+    - **note[19:16]:** Left Volume
+    - **note[23:20]:** Waveform (instrument)
+    - **note[27:24]:** Octave
+    - **note[31:28]:** Note
+- An 8-bit ticksPerNote value which sets the duration for the notes of the phrase.
+Tick duration is 8ms. Therefore, if the ticksPerNote value of the phrase is set
+to 50, then each note in the phrase will be played for 400ms.
+- An 8-bit loopStart index which sets the note index within the phrase at which
+looping of the phrase must start.
+- An 8-bit loopEnd index which sets the note index within the phrase at which
+looping of the phrase must End.
+
+**Note:** Allowance is made for 256 phrases. The idea is to have a fixed note storage
+of 8kB, but then to allow some sort of configuration for phrase length. One can then
+decide to have 64 phrases of 32 notes each, 128 phrases of 16 notes each or 256
+phrases of 8 notes each. Or even split the note storage into sections with each
+section containing a different phrase length. Bottom line is, 256 indexes of phrase
+data will be enough.
+
+### Audio Binary Format
+The game engine expects the audio information to be in the following binary format:
+- **Note Data:** 8,192 bytes of note data arranged in 32 bit integers starting with
+note 0 of phrase 0 and ending with the last note of the last phrase. All notes and
+all phrases must be populated in the binary regardless of use.
+- **Phrase Data:** 768 bytes containing ticksPerNote, loopStart and loopEnd values
+for each phrase starting with ticksPerNote for phrase 0 and ending with loopEnd
+of the last note. That is, the first 3 bytes of the binary section contains ticksPerNote,
+loopStart and loopEnd for phrase 0.
+- **Current Total:** 8960 bytes.
+
+### Audio Creation
+Currently the only intuitive method of creating audio is to create the audio phrases
+with the SFX editor in PICO-8 fantasy console and then to convert them to the binary
+format expected by PicoPanda with the *pico8_asset_converter.py* script. Each PICO-8
+SFX corresponds to a PicoPanda Phrase. Not all PICO-8 functionality is supported yet,
+the tables below show how PICO-8 SFX values map to PicoPanda phrase values.
+
+#### Notes
+
+| Pico8 Note | PicoPanda Note | PicoPanda Value |
+|----|----|----|
+| C  | C  | 0  |
+| C# | C# | 1  |
+| D  | D  | 2  |
+| D# | D# | 3  |
+| E  | E  | 4  |
+| F  | F  | 5  |
+| F# | F# | 6  |
+| G  | G  | 7  |
+| G# | G# | 8  |
+| A  | A  | 9  |
+| A# | A# | 10 |
+| B  | B  | 11 |
+
+#### Octaves
+
+| Pico8 Octave | PicoPanda Octave | PicoPanda Value |
+|----|------|------|
+|    | 0    | 0    |
+|    | 1    | 1    |
+| 0  | 2    | 2    |
+| 1  | 3    | 3    |
+| 2  | 4    | 4    |
+| 3  | 5    | 5    |
+| 4  | 6    | 6    |
+| 5  | None | None |
+
+**Note:** Octaves 0 and 1 are available in PicoPanda, but the are not recommended for use.
+
+### Volume
+
+| Pico8 Volume | PicoPanda Volume | 
+|----|----|
+| 0  | 0  |
+| 1  | 1  |
+| 2  | 3  |
+| 3  | 4  |
+| 4  | 6  |
+| 5  | 7  |
+| 6  | 9  |
+| 7  | 10 |
+
+#### Instruments
+
+| Pico8 Instrument | Pico8 Value | PicoPanda Waveform | PicoPanda Value |
+|------------|----|------------------|----|
+| Triangle   | 0  | Triangle         | 2  |
+| Tilted Saw | 1  | Tilted Saw       | 3  |
+| Saw        | 2  | Straight Saw     | 4  |
+| Square     | 3  | Square           | 0  |
+| Pulse      | 4  | Pule             | 1  |
+| Organ      | 5  | Organ            | 6  |
+| Noise      | 6  | Random Bit Noise | 9  |
+| Phaser     | 7  | Sin              | 5  |
+|            |    | White Noise Lin  | 7  |
+|            |    | White Noise Hyp  | 8  |
+|            |    | Silence          | 10 |
+
+#### Effects
+
+| Pico8 Effect | Pico8 Value | PicoPanda Effect | PicoPanda Value |
+|---------------|---|----------|---|
+| None          | 0 | None     | 0 |
+| Slide         | 1 | None     | 0 |
+| Vibrato       | 2 | None     | 0 |
+| Drop          | 3 | None     | 0 |
+| Fade In       | 4 | Fade In  | 1 |
+| Fade Out      | 5 | Fade Out | 2 |
+| Arpeggio Fast | 6 | None     | 0 |
+| Arpeggio Slow | 7 | None     | 0 |
+
+### Audio Conversion
+Use the *pico8_asset_converter.py* script to extract the audio. From the root directory
+of the repo, the command will look like this:
+
+```bash
+python ./tools/pic8_asset_converter/pico8_asset_converter.py --input path/to/my_pico8_file.p8 --sfx
+```
+
+or on windows
+
+```powershell
+python .\\tools\\pic8_asset_converter\\pico8_asset_converter.py --input path\\to\\my_pico8_file.p8 --sfx
+```
+
+The script will then generate a file named *my_pico8_file_pp_audio.p8* which can be
+passed in to the *make_slot_bin.p8* script with the *--audio* option.
+
 ## Building and Uploading
 
 ### Complete Build Process
@@ -209,13 +377,14 @@ Combine your Lua game code and graphics binary into a single binary:
 
 ```bash
 cd tools
-python make_slot_bin.py --script ../my_game/game.lua --output game_slot.bin --graphics my_game_graphics.bin
+python make_slot_bin.py --script ../my_game/game.lua --output game_slot.bin --graphics my_game_graphics.bin --audio my_pico8_file_pp_audio.p8
 ```
 
 **Arguments:**
 - `--script` or `-s`: Your Lua game file
 - `--output` or `-o`: Output binary file
 - `--graphics` or `-g`: Graphics binary exported from VSCode extension
+- `--audio` or `-a`: Audio binary file
 
 #### 3. Upload to PicoPanda
 Upload the game binary to your PicoPanda device:
