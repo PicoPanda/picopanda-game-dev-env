@@ -161,7 +161,7 @@ function check_land()
 
     over_pad = (l_x >= pad.x) and (r_x <= pad.x + pad.width)
     on_pad = b_y >= pad.y - 1
-    slow = (player.dy < 0.5) and (player.dy < 0.25)
+    slow = (player.dy < 0.4) and (player.dx < 0.2) and (player.dx > -0.2)
 
     if(over_pad and on_pad and slow) then
         end_game(true)
