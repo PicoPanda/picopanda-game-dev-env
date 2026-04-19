@@ -1,0 +1,501 @@
+---
+# Minima main Sass entry; custom PicoPanda 4-bit grayscale skin below.
+---
+
+@import "minima";
+
+/* --- PicoPanda: 4-bit grayscale console skin (inspired by cart-style UIs, no color) --- */
+$g0: #080808;
+$g1: #121212;
+$g2: #1c1c1c;
+$g3: #2a2a2a;
+$g4: #3c3c3c;
+$g5: #5a5a5a;
+$g6: #787878;
+$g7: #9a9a9a;
+$g8: #bcbcbc;
+$g9: #dedede;
+$g10: #f2f2f2;
+$g11: #ffffff;
+
+/* Reading size (VT323) — one base step + slightly larger section titles */
+$pp-body: 1.56rem;
+$pp-lead: 1.72rem;
+/* Fenced code: monospace reads larger than VT323 at same em — keep in rem below body */
+$pp-code-block: 0.88rem;
+
+/* Press Start 2P is a bitmap font: fractional px + default smoothing squashes glyphs.
+   Use integer px sizes, line-height: 1, no letter-spacing, and no webkit AA. */
+@mixin pp-press-start {
+  font-family: "Press Start 2P", monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  text-rendering: optimizeSpeed;
+}
+
+body.pp-retro {
+  background-color: $g0;
+  color: $g9;
+  font-family: "VT323", ui-monospace, monospace;
+  font-size: $pp-body;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Site chrome only: pixel font (see @mixin pp-press-start) */
+body.pp-retro .site-title {
+  @include pp-press-start;
+}
+
+/* Pages & posts: VT323 at two clear steps (body + headings) */
+body.pp-retro .post-header .post-title,
+body.pp-retro .post-content,
+body.pp-retro .home {
+  font-family: "VT323", ui-monospace, monospace;
+}
+
+body.pp-retro .post-header .post-title {
+  font-size: 2.05rem;
+  line-height: 1.25;
+  font-weight: bold;
+  color: $g11;
+  text-shadow: 2px 2px 0 $g3;
+  margin-bottom: 1rem;
+}
+
+body.pp-retro .post-content,
+body.pp-retro .home {
+  font-size: $pp-body;
+  line-height: 1.45;
+}
+
+body.pp-retro .post-content h2 {
+  font-size: $pp-lead;
+  line-height: 1.3;
+  font-weight: bold;
+  color: $g11;
+  margin: 2rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid $g5;
+}
+
+body.pp-retro .post-content h3 {
+  font-size: $pp-body;
+  line-height: 1.35;
+  font-weight: bold;
+  color: $g10;
+  margin: 1.35rem 0 0.45rem;
+}
+
+body.pp-retro .post-content p,
+body.pp-retro .post-content li,
+body.pp-retro .post-content td,
+body.pp-retro .post-content th {
+  font-size: 1em;
+}
+
+body.pp-retro .post-content strong {
+  color: $g11;
+  font-weight: bold;
+}
+
+body.pp-retro .post-list h3 {
+  font-family: "VT323", monospace;
+  font-size: $pp-body;
+  font-weight: bold;
+  line-height: 1.25;
+  margin: 0.15rem 0 0;
+}
+
+body.pp-retro a {
+  color: $g11;
+  text-decoration: none;
+  border-bottom: 2px solid $g6;
+}
+
+body.pp-retro a:hover {
+  color: $g11;
+  border-bottom-color: $g11;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.pp-retro .site-header.pp-site-header {
+  border: none;
+  border-bottom: 4px solid $g4;
+  box-shadow: 0 4px 0 $g1;
+  background: linear-gradient(180deg, $g2 0%, $g1 100%);
+}
+
+body.pp-retro .site-title,
+body.pp-retro .site-title:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: $g11;
+  font-size: 16px;
+  border-bottom: none;
+}
+
+body.pp-retro .site-title:hover {
+  background: transparent;
+  color: $g11;
+  filter: brightness(1.08);
+}
+
+body.pp-retro .site-logo {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  flex-shrink: 0;
+  border: 2px solid $g6;
+  box-shadow: 3px 3px 0 $g0;
+}
+
+body.pp-retro .site-nav .page-link {
+  @include pp-press-start;
+  font-size: 11px;
+  color: $g10;
+  border: 2px solid $g5;
+  padding: 10px 12px;
+  margin-left: 0.5rem;
+  background: $g2;
+  box-shadow: 3px 3px 0 $g0;
+}
+
+body.pp-retro .site-nav .page-link:hover {
+  color: $g11;
+  border-color: $g8;
+  background: $g3;
+}
+
+body.pp-retro .site-nav .menu-icon svg path {
+  fill: $g10;
+}
+
+body.pp-retro .page-content {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+body.pp-retro .wrapper {
+  max-width: 52rem;
+}
+
+/* “cartridge” frame around main text blocks */
+body.pp-retro .post-content,
+body.pp-retro .home {
+  background: $g1;
+  border: 3px solid $g5;
+  box-shadow:
+    inset 0 0 0 2px $g0,
+    4px 4px 0 $g0;
+  padding: 1.75rem 1.5rem;
+}
+
+body.pp-retro .post-list-heading {
+  font-family: "VT323", monospace;
+  font-size: $pp-lead;
+  font-weight: bold;
+  color: $g10;
+  margin-bottom: 1rem;
+}
+
+body.pp-retro .post-list > li {
+  border-bottom: 2px dashed $g4;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+body.pp-retro .post-meta {
+  color: $g7;
+  font-size: 1.15rem;
+}
+
+body.pp-retro .footer-col-wrapper {
+  color: $g7;
+}
+
+body.pp-retro .site-footer {
+  border-top: 4px solid $g4;
+  background: $g1;
+  padding: 1.5rem 0;
+}
+
+body.pp-retro .footer-heading {
+  color: $g10;
+  font-family: "VT323", monospace;
+  font-size: $pp-body;
+  font-weight: bold;
+}
+
+body.pp-retro .social-links a {
+  border-bottom: none;
+}
+
+body.pp-retro pre,
+body.pp-retro code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Minima ships Rouge styles with white/#eef backgrounds and colored tokens — override for dark + grayscale only */
+body.pp-retro div.highlighter-rouge {
+  background: $g0 !important;
+  margin-bottom: 1rem;
+}
+
+body.pp-retro .highlight,
+body.pp-retro div.highlighter-rouge .highlight {
+  background: $g0 !important;
+  border: 2px solid $g5;
+  box-shadow: 3px 3px 0 $g0;
+  color: $g9 !important;
+}
+
+body.pp-retro .highlight pre {
+  background: transparent !important;
+  color: $g9 !important;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 0;
+  overflow-x: auto;
+}
+
+body.pp-retro .highlight pre code {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Fenced / Rouge blocks: smaller than VT323 body (monospace cap-height reads “bigger”) */
+body.pp-retro .page-content .highlight pre,
+body.pp-retro .page-content figure.highlight pre,
+body.pp-retro .page-content div.highlighter-rouge .highlight pre,
+body.pp-retro .home .highlight pre,
+body.pp-retro .home figure.highlight pre {
+  font-size: $pp-code-block !important;
+  line-height: 1.42 !important;
+}
+
+/* Inline `code`: small pixel font + pill (fenced blocks reset below) */
+body.pp-retro .post-content code.highlighter-rouge {
+  @include pp-press-start;
+  font-size: 11px;
+  display: inline-block;
+  background: $g3 !important;
+  color: $g11 !important;
+  border: 1px solid $g5 !important;
+  padding: 6px 8px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+body.pp-retro .post-content .highlight code.highlighter-rouge,
+body.pp-retro .post-content .highlight pre code,
+body.pp-retro .post-content pre code.highlighter-rouge,
+body.pp-retro .post-content pre.highlight code,
+body.pp-retro .post-content figure.highlight pre code,
+body.pp-retro .home .highlight code.highlighter-rouge,
+body.pp-retro .home .highlight pre code,
+body.pp-retro .home figure.highlight pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 1em !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  padding: 0 !important;
+  white-space: pre !important;
+  vertical-align: baseline !important;
+  position: static !important;
+  top: auto !important;
+}
+
+body.pp-retro .highlight .lineno {
+  color: $g6 !important;
+  background: transparent !important;
+}
+
+/* Default token color inside blocks */
+body.pp-retro .highlight span {
+  background-color: transparent !important;
+}
+
+body.pp-retro .highlight .c,
+body.pp-retro .highlight .cm,
+body.pp-retro .highlight .c1,
+body.pp-retro .highlight .cs,
+body.pp-retro .highlight .cp,
+body.pp-retro .highlight .ch {
+  color: $g6 !important;
+  font-style: italic !important;
+}
+
+body.pp-retro .highlight .k,
+body.pp-retro .highlight .kc,
+body.pp-retro .highlight .kd,
+body.pp-retro .highlight .kn,
+body.pp-retro .highlight .kp,
+body.pp-retro .highlight .kr,
+body.pp-retro .highlight .kt,
+body.pp-retro .highlight .ow,
+body.pp-retro .highlight .o {
+  color: $g11 !important;
+  font-weight: bold !important;
+  font-style: normal !important;
+}
+
+body.pp-retro .highlight .s,
+body.pp-retro .highlight .sb,
+body.pp-retro .highlight .sc,
+body.pp-retro .highlight .sd,
+body.pp-retro .highlight .s2,
+body.pp-retro .highlight .se,
+body.pp-retro .highlight .sh,
+body.pp-retro .highlight .si,
+body.pp-retro .highlight .sx,
+body.pp-retro .highlight .sr,
+body.pp-retro .highlight .s1,
+body.pp-retro .highlight .ss {
+  color: $g8 !important;
+  font-style: normal !important;
+}
+
+body.pp-retro .highlight .m,
+body.pp-retro .highlight .mi,
+body.pp-retro .highlight .mf,
+body.pp-retro .highlight .mh,
+body.pp-retro .highlight .mo,
+body.pp-retro .highlight .il {
+  color: $g7 !important;
+}
+
+body.pp-retro .highlight .p {
+  color: $g9 !important;
+  font-weight: normal !important;
+}
+
+body.pp-retro .highlight .n,
+body.pp-retro .highlight .nx {
+  color: $g10 !important;
+}
+
+body.pp-retro .highlight .na,
+body.pp-retro .highlight .nb,
+body.pp-retro .highlight .nc,
+body.pp-retro .highlight .no,
+body.pp-retro .highlight .nf,
+body.pp-retro .highlight .nn,
+body.pp-retro .highlight .nt,
+body.pp-retro .highlight .nv,
+body.pp-retro .highlight .vc,
+body.pp-retro .highlight .vg,
+body.pp-retro .highlight .vi,
+body.pp-retro .highlight .bp,
+body.pp-retro .highlight .ne,
+body.pp-retro .highlight .ni {
+  color: $g10 !important;
+  font-style: normal !important;
+}
+
+body.pp-retro .highlight .gh,
+body.pp-retro .highlight .gp,
+body.pp-retro .highlight .gu,
+body.pp-retro .highlight .gs,
+body.pp-retro .highlight .ge,
+body.pp-retro .highlight .w {
+  color: $g7 !important;
+}
+
+body.pp-retro .highlight .err,
+body.pp-retro .highlight .gr,
+body.pp-retro .highlight .gt {
+  color: $g11 !important;
+  background-color: $g3 !important;
+  font-style: normal !important;
+}
+
+body.pp-retro .highlight .gd,
+body.pp-retro .highlight .gd .x {
+  color: $g9 !important;
+  background-color: $g2 !important;
+}
+
+body.pp-retro .highlight .gi,
+body.pp-retro .highlight .gi .x {
+  color: $g11 !important;
+  background-color: $g3 !important;
+}
+
+body.pp-retro .highlight .go {
+  color: $g6 !important;
+}
+
+/* Kill Minima’s near-white zebra rows (tr:nth-child(even)); keep dark-only striping */
+body.pp-retro .post-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.25rem 0;
+  font-size: 1em;
+  color: $g9 !important;
+  border: 2px solid $g5;
+  background: $g1;
+}
+
+body.pp-retro .post-content table tr {
+  background: transparent !important;
+}
+
+body.pp-retro .post-content table th,
+body.pp-retro .post-content table td {
+  border: 1px solid $g5;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+  color: $g9 !important;
+  background-color: $g1 !important;
+}
+
+body.pp-retro .post-content table tbody tr:nth-child(even) td {
+  background-color: $g2 !important;
+}
+
+body.pp-retro .post-content table th {
+  background-color: $g3 !important;
+  color: $g11 !important;
+  font-weight: bold;
+  font-family: "VT323", ui-monospace, monospace;
+}
+
+body.pp-retro .post-content hr {
+  border: 0;
+  border-top: 2px dashed $g5;
+  margin: 1.75rem 0;
+}
+
+/* Mobile nav panel */
+@media screen and (max-width: 600px) {
+  body.pp-retro .site-nav .trigger {
+    background: $g1;
+    border: 3px solid $g5;
+    box-shadow: 4px 4px 0 $g0;
+  }
+
+  body.pp-retro .site-nav .page-link {
+    display: block;
+    margin: 0.35rem 0;
+    text-align: center;
+  }
+
+  body.pp-retro .site-title {
+    font-size: 14px;
+  }
+}

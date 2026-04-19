@@ -1,0 +1,27 @@
+# PicoPanda docs site (GitHub Pages + Jekyll + Minima)
+
+title: PicoPanda
+email: your-email@example.com
+description: >-
+  PicoPanda — retro handheld game dev. Documentation and guides.
+
+baseurl: "/picopanda-game-dev-env"
+url: "https://picopanda.github.io"
+
+github_username: picopanda
+
+# Optional: override GitHub repo URL for Guide page links (defaults to github-metadata on Pages)
+# repo_url: "https://github.com/OWNER/picopanda-game-dev-env"
+
+# Minima: which pages appear in the header nav (paths under docs/)
+header_pages:
+  - guide.markdown
+  - api.markdown
+  - emulator/index.html
+  - about.markdown
+
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed
