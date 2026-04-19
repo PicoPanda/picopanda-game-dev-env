@@ -1,0 +1,2 @@
+python ..\..\tools\pico8_asset_converter\pico8_asset_converter.py -i lunar_lander.p8 -g -x
+python ..\..\tools\make_slot_bin.py -s lunar_lander.lua -g lunar_lander_pp_graphics.bin -a lunar_lander_pp_audio.bin -o lunar_lander.bin

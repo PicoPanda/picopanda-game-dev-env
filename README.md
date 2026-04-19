@@ -205,24 +205,54 @@ The display uses 4-bit greyscale (16 shades):
 - **Coordinate system:** (0,0) at top-left, (127,127) at bottom-right
 - **String positioning:** Coordinates represent the bottom-left corner of text
 
-## Graphics Creation
+## Graphics
+
+### Graphics Capabilities
+- Sprite sheet (128x128 pixels, 4-bit greyscale)
+- Sprite flags (256 sprites, 8 flags each)
+- Tile map (128x64 tiles)
+
+### Graphics Binary Structure
+
+PicoPand stores the graphics in a game binary as follows:
+- **Sprite Sheet:** 8,192 bytes (128x128 pixels at 4 bits per pixel)
+- **Tile Map:** 8,192 bytes (128x64 tiles, 1 byte per tile)
+- **Sprite Flags:** 256 bytes (1 byte per sprite, 8 flags per byte)
+- **Total:** 16,640 bytes
+
+### PICO-8 Editor
+
+The current recommended method for creating all the graphics assets is with the
+PICO-8 sprite editor and the PICO-8 map editor. The PICO-8 palette is changed into
+greyscale as follows:
+- PICO-8 index 0, which is black, maps to PicoPanda index 15 and is used for transparency.
+- PICO-8 index 5, which is a dark grey, maps to PicoPanda index 0 which is black.
+- All other colours map to greyscale in order of colour luminosity. This works surprisingly
+  well in most cases.
+
+Once the graphics have been created, use the *pico8_asset_converter.py* script to
+extract it. From the root directory of the repo, the command will look like this:
+
+```bash
+python ./tools/pic8_asset_converter/pico8_asset_converter.py --input path/to/my_pico8_file.p8 --gfx
+```
+
+or on windows
+
+```powershell
+python .\\tools\\pic8_asset_converter\\pico8_asset_converter.py --input path\\to\\my_pico8_file.p8 --sgfx
+```
+
+The script will then generate a file named *my_pico8_file_pp_graphics.p8* containing
+the sprites, sprite flags and the map in the required binary format. This binary
+filr can then be passed in to the *make_slot_bin.py* script with the *--graphics*
+option. See the [Building and Uploading](#building-and-uploading) section.
 
 ### Using the PicoPanda VSCode Extension
 
 1. **Install the extension** from the VS Code marketplace - Or grab the .vsix from the repo
 2. **Create graphics** using the built-in editor
-3. **Export graphics binary** (.bin file) containing:
-   - Sprite sheet (128x128 pixels, 4-bit greyscale)
-   - Tile map (128x64 tiles)
-   - Sprite flags (256 sprites, 8 flags each)
-
-### Graphics Binary Structure
-
-The exported graphics binary contains:
-- **Sprite Sheet:** 8,192 bytes (128x128 pixels at 4 bits per pixel)
-- **Tile Map:** 8,192 bytes (128x64 tiles, 1 byte per tile)
-- **Sprite Flags:** 256 bytes (1 byte per sprite, 8 flags per byte)
-- **Total:** 16,640 bytes
+3. **Export graphics binary** (.bin file) which contains the graphics packed into a suitable binary structure.
 
 **Note:** Currently only 8x8 pixel sprites are supported. 16x16 and 32x32 sprite sizes are not yet implemented.
 
@@ -324,7 +354,7 @@ the tables below show how PICO-8 SFX values map to PicoPanda phrase values.
 | Tilted Saw | 1  | Tilted Saw       | 3  |
 | Saw        | 2  | Straight Saw     | 4  |
 | Square     | 3  | Square           | 0  |
-| Pulse      | 4  | Pule             | 1  |
+| Pulse      | 4  | PulSe            | 1  |
 | Organ      | 5  | Organ            | 6  |
 | Noise      | 6  | Random Bit Noise | 9  |
 | Phaser     | 7  | Sin              | 5  |
