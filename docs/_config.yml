@@ -17,6 +17,7 @@ github_username: picopanda
 header_pages:
   - guide.markdown
   - api.markdown
+  - emulator/index.html
   - about.markdown
 
 

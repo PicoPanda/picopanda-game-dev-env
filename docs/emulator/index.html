@@ -1,0 +1,131 @@
+---
+layout: null
+permalink: /emulator/
+title: Emulator
+description: Run PicoPanda games in the browser (WebAssembly).
+---
+{% assign pp_emu_js = '/emulator/PicoPanda_Emulator.js' | relative_url %}
+{% assign pp_emu_dir = '/emulator/' | relative_url %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PicoPanda Emulator (WASM)</title>
+  <script src="{{ '/emulator/coi-serviceworker.js' | relative_url }}"></script>
+  <style>
+    body { margin: 0; background: #111; color: #888; font-family: system-ui, sans-serif; }
+    #wasm-bar {
+      max-width: 512px; margin: 0 auto; padding: 6px 8px 4px;
+      font-size: 11px; text-align: right;
+    }
+    #wasm-bar label {
+      cursor: pointer; color: #aaa;
+      border: 1px solid #444; border-radius: 4px; padding: 4px 8px; display: inline-block;
+    }
+    #wasm-bar label:hover { color: #ddd; border-color: #666; }
+    #wasm-bar input[type="file"] { display: none; }
+    #canvas { display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <noscript>This page requires JavaScript.</noscript>
+  <div id="wasm-bar" title="Or drag a .bin onto the page or canvas">
+    <label for="wasm-file-input">Load .bin…</label>
+    <input type="file" id="wasm-file-input" accept=".bin,application/octet-stream">
+  </div>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"
+    title="Drag a PicoPanda game .bin here"></canvas>
+  <script>
+    (function () {
+      var emuDir = {{ pp_emu_dir | jsonify }};
+      var emuJs = {{ pp_emu_js | jsonify }};
+
+      function preventNav(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      function stageFileAndNotify(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var data = new Uint8Array(reader.result);
+            var len = data.length;
+            var ptr = Module['_malloc'](len);
+            if (!ptr) {
+              console.error('PicoPanda WASM: malloc failed for drop');
+              return;
+            }
+            Module['HEAPU8'].set(data, ptr);
+            var ret = Module['ccall'](
+              'wasm_stage_drop_from_heap',
+              'number',
+              ['number', 'number'],
+              [ptr, len]
+            );
+            Module['_free'](ptr);
+            if (ret !== 0) {
+              console.error('PicoPanda WASM: wasm_stage_drop_from_heap failed:', ret);
+            }
+          } catch (err) {
+            console.error('PicoPanda WASM: failed to stage drop', err);
+          }
+        };
+        reader.onerror = function () {
+          console.error('PicoPanda WASM: FileReader error');
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function onDrop(e) {
+        preventNav(e);
+        var dt = e.dataTransfer;
+        if (!dt || !dt.files || dt.files.length === 0) return;
+        stageFileAndNotify(dt.files[0]);
+      }
+
+      function installFileDrop() {
+        var canvas = document.getElementById('canvas');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (ev) {
+          window.addEventListener(ev, ev === 'drop' ? onDrop : preventNav, false);
+        });
+        if (canvas) {
+          ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (ev) {
+            canvas.addEventListener(ev, ev === 'drop' ? onDrop : preventNav, false);
+          });
+        }
+        var inp = document.getElementById('wasm-file-input');
+        if (inp) {
+          inp.addEventListener('change', function () {
+            if (inp.files && inp.files[0]) {
+              stageFileAndNotify(inp.files[0]);
+            }
+            inp.value = '';
+          });
+        }
+      }
+
+      var Module = {
+        mainScriptUrlOrBlob: emuJs,
+        locateFile: function (path) {
+          path = String(path || '');
+          if (path.charAt(0) === '/') {
+            return path;
+          }
+          return emuDir + path.replace(/^\.\//, '');
+        },
+        canvas: (function () {
+          var c = document.getElementById('canvas');
+          if (!c) { console.error('PicoPanda WASM: missing #canvas'); }
+          return c;
+        })(),
+        postRun: [installFileDrop]
+      };
+      window.Module = Module;
+    })();
+  </script>
+  <script src="{{ pp_emu_js }}"></script>
+</body>
+</html>
