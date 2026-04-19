@@ -177,6 +177,51 @@ phrase_stop(-1, -1) -- Stop audio on all channels.
 
 ```
 
+### Math Functions
+
+#### `rnd_int([lower,] upper)`
+Returns a random integer greater than or equal to the lower bound and less than
+the upper bound. If only one argument is given then the argument is taken as the
+upper bound and the lower bound is taken as 0. Arguments can be in the range of
+a signed 32-bit integer. Return value is in the range of a signed 32-bit integer.
+
+```lua
+x = rnd_int(100) -- Returns a value which could be any value from 0 to 99.
+
+x = rnd_int(1000, 3001) -- Returns a value which could be any value from 1000 to 3000.
+
+```
+
+#### `mid_int(a, b, c)`
+Returns the middle value of 3 given values. Arguments can be in the range of a
+signed 32-bit integer. Return value is in the range of a signed 32-bit integer.
+
+```lua
+x = mid_int(1, 3, 4) -- Returns 2.
+
+x = mid_int(10, 100, 1000) -- Returns 100.
+
+x = mid_int(10, 10, 1000) -- Returns 10.
+
+x = mid_int(10, 1000, 1000) -- Returns 1000.
+
+```
+
+#### `clamp_int(val, lower, upper)`
+Clamps an integer to within a specified range and returns the clamped value and
+a boolean specifying whether clamping was applied. the lower and upper bounds are
+both inclusive. Arguments can be in the range of a signed 32-bit integer. Return
+value is in the range of a signed 32-bit integer.
+
+```lua
+x, b = clamp_int(5, 0, 10) -- Returns 5 and false.
+
+x, b = clamp_int(15, 0, 10) -- Returns 15 and true.
+
+x, b = clamp_int(-5, 0, 10) -- Returns 0 and true.
+
+```
+
 ### Color Values
 
 The display uses 4-bit greyscale (16 shades):
