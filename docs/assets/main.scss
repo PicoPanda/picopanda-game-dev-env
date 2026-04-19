@@ -19,8 +19,10 @@ $g10: #f2f2f2;
 $g11: #ffffff;
 
 /* Reading size (VT323) — one base step + slightly larger section titles */
-$pp-body: 1.42rem;
-$pp-lead: 1.55rem;
+$pp-body: 1.56rem;
+$pp-lead: 1.72rem;
+/* Fenced code: monospace reads larger than VT323 at same em — keep in rem below body */
+$pp-code-block: 0.88rem;
 
 /* Press Start 2P is a bitmap font: fractional px + default smoothing squashes glyphs.
    Use integer px sizes, line-height: 1, no letter-spacing, and no webkit AA. */
@@ -63,7 +65,7 @@ body.pp-retro .home {
 }
 
 body.pp-retro .post-header .post-title {
-  font-size: 1.85rem;
+  font-size: 2.05rem;
   line-height: 1.25;
   font-weight: bold;
   color: $g11;
@@ -242,7 +244,6 @@ body.pp-retro .social-links a {
 body.pp-retro pre,
 body.pp-retro code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.92em;
 }
 
 /* Minima ships Rouge styles with white/#eef backgrounds and colored tokens — override for dark + grayscale only */
@@ -273,26 +274,39 @@ body.pp-retro .highlight pre code {
   color: inherit !important;
 }
 
+/* Fenced / Rouge blocks: smaller than VT323 body (monospace cap-height reads “bigger”) */
+body.pp-retro .page-content .highlight pre,
+body.pp-retro .page-content figure.highlight pre,
+body.pp-retro .page-content div.highlighter-rouge .highlight pre,
+body.pp-retro .home .highlight pre,
+body.pp-retro .home figure.highlight pre {
+  font-size: $pp-code-block !important;
+  line-height: 1.42 !important;
+}
+
 /* Inline `code`: small pixel font + pill (fenced blocks reset below) */
 body.pp-retro .post-content code.highlighter-rouge {
   @include pp-press-start;
-  font-size: 10px;
+  font-size: 11px;
   display: inline-block;
   background: $g3 !important;
   color: $g11 !important;
   border: 1px solid $g5 !important;
   padding: 6px 8px;
   white-space: nowrap;
-  vertical-align: text-bottom;
+  vertical-align: middle;
 }
 
 body.pp-retro .post-content .highlight code.highlighter-rouge,
 body.pp-retro .post-content .highlight pre code,
 body.pp-retro .post-content pre code.highlighter-rouge,
 body.pp-retro .post-content pre.highlight code,
-body.pp-retro .post-content figure.highlight pre code {
+body.pp-retro .post-content figure.highlight pre code,
+body.pp-retro .home .highlight code.highlighter-rouge,
+body.pp-retro .home .highlight pre code,
+body.pp-retro .home figure.highlight pre code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
-  font-size: inherit !important;
+  font-size: 1em !important;
   line-height: inherit !important;
   letter-spacing: normal !important;
   background: transparent !important;

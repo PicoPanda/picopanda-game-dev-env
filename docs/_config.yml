@@ -10,8 +10,12 @@ url: "https://picopanda.github.io"
 
 github_username: picopanda
 
+# Optional: override GitHub repo URL for Guide page links (defaults to github-metadata on Pages)
+# repo_url: "https://github.com/OWNER/picopanda-game-dev-env"
+
 # Minima: which pages appear in the header nav (paths under docs/)
 header_pages:
+  - guide.markdown
   - api.markdown
   - about.markdown
 
