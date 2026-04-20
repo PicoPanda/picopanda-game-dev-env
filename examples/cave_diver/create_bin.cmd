@@ -1,0 +1,2 @@
+python ..\..\tools\pico8_asset_converter\pico8_asset_converter.py -i cave_diver.p8 -g -x
+python ..\..\tools\make_slot_bin.py -s cave_diver.lua -g cave_diver_pp_graphics.bin -a cave_diver_pp_audio.bin -o cave_diver.bin
