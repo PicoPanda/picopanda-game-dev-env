@@ -82,12 +82,12 @@ body.pp-retro::before {
     radial-gradient(circle at 50% 45%, transparent 35%, rgba(0, 0, 0, $pp-vignette-opacity) 100%),
     repeating-linear-gradient(
       0deg,
-      rgba(255, 255, 255, 0.04) 0,
-      rgba(255, 255, 255, 0.04) 1px,
+      rgba(255, 255, 255, 0.025) 0,
+      rgba(255, 255, 255, 0.025) 1px,
       transparent 1px,
       transparent 3px
     );
-  mix-blend-mode: screen;
+  opacity: 0.9;
   z-index: 1;
 }
 
