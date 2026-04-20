@@ -1,0 +1,208 @@
+pico-8 cartridge // http://www.pico-8.com
+version 43
+__lua__
+--game variables
+g=0.025 --gravity
+
+function _init()
+ game_over=false
+ win=false
+ make_player()
+ make_ground()
+end
+
+function _update()
+ if(not game_over) then
+ 	move_player()
+ 	check_land()
+ else
+  if(btnp(5)) _init()
+ end
+end
+
+function _draw()
+ cls()
+ draw_stars()
+ draw_ground()
+ draw_player()
+ 
+ if(game_over) then
+  if(win) then
+   print("you win!",48,48,11)
+  else
+   print("you died!",47,48,8)
+  end
+  print("press ❎ to play again",20,70,5)
+ end
+end
+
+function make_player()
+ p={}
+ p.x=60 --position
+ p.y=8
+ p.dx=0 --movement
+ p.dy=0
+ p.sprite=1
+ p.alive=true
+ p.thrust=0.075
+end
+
+function make_ground()
+ --create the ground
+ gnd={}
+ local top=96  --highest point
+ local btm=120 --lowest point
+ 
+ --set up the landing pad
+ pad={}
+ pad.width=15
+ pad.x=rndb(0,126-pad.width)
+ pad.y=rndb(top,btm)
+ pad.sprite=2
+ 
+ --create ground at pad
+ for i=pad.x,pad.x+pad.width do
+  gnd[i]=pad.y
+ end
+ 
+ --create the ground right of pad
+ for i=pad.x+pad.width+1,127 do
+  local h=rndb(gnd[i-1]-3,gnd[i-1]+3)
+  gnd[i]=mid(top,h,btm)
+ end
+ 
+ --create the ground left of pad
+ for i=pad.x-1,0,-1 do
+  local h=rndb(gnd[i+1]-3,gnd[i+1]+3)
+  gnd[i]=mid(top,h,btm)
+ end
+ 
+end
+
+function move_player()
+ p.dy+=g
+ 
+ thrust()
+ 
+ p.x+=p.dx
+ p.y+=p.dy
+ 
+ stay_on_screen()
+end
+
+function check_land()
+ l_x=flr(p.x)   --left side of ship
+ r_x=flr(p.x+7) --right side of ship
+ b_y=flr(p.y+7) --bottom of ship
+ 
+ over_pad=l_x>=pad.x and r_x<=pad.x+pad.width
+ on_pad=b_y>=pad.y-1
+ slow=p.dy<1
+ 
+ if(over_pad and on_pad and slow) then
+  end_game(true)
+ elseif(over_pad and on_pad) then
+  end_game(false)
+ else
+  for i=l_x,r_x do
+   if(gnd[i]<=b_y) end_game(false)
+  end
+ end
+end
+
+function end_game(won)
+ game_over=true
+ win=won
+ exploding_spr=5
+ exploding_frc=5
+ 
+ if(win) then
+  sfx(1)
+ else
+  sfx(2)
+ end
+end
+
+function thrust()
+ --add thrust to movement
+ if(btn(0)) p.dx-=p.thrust
+ if(btn(1)) p.dx+=p.thrust
+ if(btn(2)) p.dy-=p.thrust
+ 
+ --thrust sound
+ if(btn(0) or btn(1) or btn(2)) sfx(0)
+end
+
+function stay_on_screen()
+ if(p.x<0) then
+  p.x=0
+  p.dx=0
+ elseif(p.x>119) then
+  p.x=119
+  p.dx=0
+ end
+ 
+ if(p.y<0) then
+  p.y=0
+  p.dy=0
+ end
+end
+
+function rndb(low,high)
+ return flr(rnd(high-low+1)+low)
+end
+
+function draw_stars()
+ srand(1)
+ for i=1,50 do
+  pset(rndb(0,127),rndb(0,127),rndb(5,7))
+ end
+ srand(time())
+end
+
+function draw_ground()
+ for i=0,127 do
+  line(i,gnd[i],i,127,5)
+ end
+ spr(pad.sprite,pad.x,pad.y,2,1)
+end
+
+function draw_player()
+ if (game_over and win) then
+  spr(p.sprite,p.x,p.y)
+  spr(4,p.x,p.y-8)
+ elseif(game_over) then
+  if(exploding_spr<=9) then
+   spr(exploding_spr,p.x,p.y)
+   exploding_frc-=1
+   if(exploding_frc==0) then
+   	exploding_spr+=1
+   	exploding_frc=5
+   end
+  end
+ else
+  spr(p.sprite,p.x,p.y)
+  if(btn(0)) spr(18,p.x+8,p.y)
+ 	if(btn(1)) spr(16,p.x-8,p.y)
+ 	if(btn(2)) spr(17,p.x,p.y+8)
+ end
+end
+__gfx__
+0000000000666600761dddddddddd766000000000088880000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000066c76607666666666666666000000000899998000088000000000000000000000000000000000000000000000000000000000000000000000000000
+0070070066ccc766007666666666660000000000899aa99800899800000880000008000000000000000000000000000000000000000000000000000000000000
+0007700066cccc660000000000000000000b600089aaaa98089aa980008a98000090000000000000000000000000000000000000000000000000000000000000
+0007700066555566000000000000000000bb600089aaaa98089aa9800089a8000000a00000000000000000000000000000000000000000000000000000000000
+007007000666666000000000000000000bbb6000899aa99800899800000880000008000000000000000000000000000000000000000000000000000000000000
+00000000050550500000000000000000000060000899998000088000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000660660660000000000000000000060000088880000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000990990990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000009a0a90a90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000a9a000a00a9a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000a990000000099a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000a9000000009a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+010c01000062000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000001b3701b330183701833013370133301b3701b33000300183701b3701b3300030000300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300
+010414003b670356602b650226401c6401763013630106300d6200a62007620056200461003610026100161001610006100061000610000000000000000000000000000000000000000000000000000000000000
+011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

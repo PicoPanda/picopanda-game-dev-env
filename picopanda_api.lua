@@ -127,15 +127,56 @@ function set_camera_offset(x, y) end
 ---@return number y The current y pixel offset
 function get_camera_offset() end
 
----Play a phrase
----@return number index The index of the phrase to play
----@return number channel The channel on which to play the phrase (optional), available channel if omitted or negative.
+--- Play a phrase
+--- @param index number         The index of the phrase to play
+--- @param channel number       The channel on which to play the phrase (optional).
+---                             Selects the next available channel if omitted or
+---                             negative.
 function phrase_play() end
 
----Stop a phrase
----@return number index The index of the phrase to stop, negative to disregard phrase and just stop the selected audio channels.
----@return number channel The channel on which to stop the phrase, all channels if omitted or negative.
+--- Stop a phrase
+--- @param index number         The index of the phrase to stop. Pass a negative
+---                             number to disregard phrase and just stop the selected
+---                             audio channel(s).
+--- @param channel number       The channel on which to stop the phrase. All channels
+---                             if omitted or negative.
 function phrase_stop() end
+
+--- Returns a random integer from a specified range.
+--- If both bounds are provided, returns an integer such that:
+---     lower <= n < upper
+--- 
+--- If only one argument is provided, it is treated as the upper bound and the
+--- returned integer is:
+---     0 <= n < upper
+--- @param[opt] lower number    The inclusive lower bound.
+--- @param upper number         The exclusive upper bound.
+--- @return number n            A random integer within the specified range.
+function rnd_int([lower,] upper) end
+
+--- Returns the middle value of 3 given values.
+--- @param a number             The first value.
+---                             Values in the range of int32_t are allowed.
+--- @param b number             The second value.
+---                             Values in the range of int32_t are allowed.
+--- @param c number             The third value.
+---                             Values in the range of int32_t are allowed.
+--- @return number n            The value middle value
+function mid_int(a, b, c) end
+
+--- Clamps an integer to within a specified range and returns the clamped value
+--- and a boolean specifying whether clamping was applied.
+---     lower <= n <= upper
+---     clamped = (boolean)(n <= lower) or (boolean)(n >= upper)
+--- @param val number           The value to clamp.
+---                             Values in the range of int32_t are allowed.
+--- @param lower number         The inclusive lower value of the clamping interval.
+---                             Values in the range of int32_t are allowed.
+--- @param upper number         The inclusive upper value of the clamping interval.
+---                             Values in the range of int32_t are allowed.
+--- @return number n            The value after clamping has been applied.
+--- @return boolean clamped     A boolean specifying whether clamping was necessary.
+function clamp_int(val, lower, upper) end
 
 -- Game lifecycle functions (these should be defined in your game script)
 
