@@ -18,6 +18,25 @@ $g9: #dedede;
 $g10: #f2f2f2;
 $g11: #ffffff;
 
+/* Global retro tokens (4-bit grayscale only) */
+$pp-bg: $g0;
+$pp-surface: $g1;
+$pp-surface-raised: $g2;
+$pp-border: $g5;
+$pp-border-strong: $g7;
+$pp-text: $g7;
+$pp-text-strong: $g11;
+$pp-shadow: $g0;
+$pp-glow: rgba(255, 255, 255, 0.14);
+$pp-scanline-opacity: 0.07;
+$pp-vignette-opacity: 0.24;
+$pp-space-1: 0.5rem;
+$pp-space-2: 0.75rem;
+$pp-space-3: 1rem;
+$pp-space-4: 1.5rem;
+$pp-space-5: 2rem;
+$pp-content-width: 54rem;
+
 /* Reading size (VT323) — one base step + slightly larger section titles */
 $pp-body: 1.56rem;
 $pp-lead: 1.72rem;
@@ -37,19 +56,46 @@ $pp-code-block: 0.88rem;
 }
 
 body.pp-retro {
-  background-color: $g0;
-  color: $g9;
+  background-color: $pp-bg;
+  color: $pp-text;
   font-family: "VT323", ui-monospace, monospace;
   font-size: $pp-body;
   line-height: 1.4;
   letter-spacing: 0.02em;
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.03) 1px,
+    rgba(255, 255, 255, $pp-scanline-opacity),
+    rgba(255, 255, 255, $pp-scanline-opacity) 1px,
     transparent 1px,
     transparent 3px
   );
+  position: relative;
+}
+
+/* Strong CRT feel while preserving readability */
+body.pp-retro::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 45%, transparent 35%, rgba(0, 0, 0, $pp-vignette-opacity) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+body.pp-retro .site-header,
+body.pp-retro .page-content,
+body.pp-retro .site-footer {
+  position: relative;
+  z-index: 2;
 }
 
 /* Site chrome only: pixel font (see @mixin pp-press-start) */
@@ -65,12 +111,20 @@ body.pp-retro .home {
 }
 
 body.pp-retro .post-header .post-title {
-  font-size: 2.05rem;
-  line-height: 1.25;
+  font-size: 2.2rem;
+  line-height: 1.15;
   font-weight: bold;
-  color: $g11;
-  text-shadow: 2px 2px 0 $g3;
-  margin-bottom: 1rem;
+  color: $pp-text-strong;
+  text-shadow:
+    1px 0 0 $g3,
+    0 1px 0 $g3,
+    3px 3px 0 $pp-shadow;
+  margin-bottom: $pp-space-3;
+  padding: 0.4rem 0.55rem;
+  display: inline-block;
+  background: $pp-surface;
+  border: 2px solid $pp-border;
+  box-shadow: 3px 3px 0 $pp-shadow;
 }
 
 body.pp-retro .post-content,
@@ -80,21 +134,31 @@ body.pp-retro .home {
 }
 
 body.pp-retro .post-content h2 {
-  font-size: $pp-lead;
-  line-height: 1.3;
+  font-size: 1.85rem;
+  line-height: 1.2;
   font-weight: bold;
-  color: $g11;
-  margin: 2rem 0 0.75rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 2px solid $g5;
+  color: $pp-text-strong;
+  margin: $pp-space-5 0 $pp-space-2;
+  padding: 0.45rem 0.65rem 0.35rem;
+  border: 2px solid $pp-border-strong;
+  background: linear-gradient(180deg, $g3 0%, $pp-surface-raised 100%);
+  box-shadow:
+    inset 0 0 0 2px $pp-bg,
+    3px 3px 0 $pp-shadow;
+  text-shadow: 2px 2px 0 $pp-shadow;
 }
 
 body.pp-retro .post-content h3 {
-  font-size: $pp-body;
-  line-height: 1.35;
+  font-size: 1.52rem;
+  line-height: 1.2;
   font-weight: bold;
   color: $g10;
-  margin: 1.35rem 0 0.45rem;
+  margin: $pp-space-4 0 $pp-space-1;
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  background: $pp-surface-raised;
+  border-left: 4px solid $pp-border-strong;
+  text-shadow: 2px 2px 0 $pp-shadow;
 }
 
 body.pp-retro .post-content p,
@@ -102,10 +166,11 @@ body.pp-retro .post-content li,
 body.pp-retro .post-content td,
 body.pp-retro .post-content th {
   font-size: 1em;
+  color: $pp-text;
 }
 
 body.pp-retro .post-content strong {
-  color: $g11;
+  color: $pp-text-strong;
   font-weight: bold;
 }
 
@@ -115,18 +180,26 @@ body.pp-retro .post-list h3 {
   font-weight: bold;
   line-height: 1.25;
   margin: 0.15rem 0 0;
+  color: $pp-text-strong;
 }
 
 body.pp-retro a {
-  color: $g11;
+  color: $pp-text-strong;
   text-decoration: none;
-  border-bottom: 2px solid $g6;
+  border-bottom: 2px solid $pp-border-strong;
+  transition: background 120ms steps(2, end), border-color 120ms steps(2, end), color 120ms steps(2, end);
 }
 
 body.pp-retro a:hover {
-  color: $g11;
-  border-bottom-color: $g11;
-  background: rgba(255, 255, 255, 0.06);
+  color: $pp-text-strong;
+  border-bottom-color: $pp-text-strong;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.pp-retro a:focus-visible {
+  outline: 2px dashed $pp-text-strong;
+  outline-offset: 2px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 body.pp-retro .site-header.pp-site-header {
@@ -187,18 +260,34 @@ body.pp-retro .page-content {
 }
 
 body.pp-retro .wrapper {
-  max-width: 52rem;
+  max-width: $pp-content-width;
 }
 
 /* “cartridge” frame around main text blocks */
 body.pp-retro .post-content,
 body.pp-retro .home {
-  background: $g1;
-  border: 3px solid $g5;
+  background: $pp-surface;
+  border: 3px solid $pp-border;
   box-shadow:
-    inset 0 0 0 2px $g0,
-    4px 4px 0 $g0;
-  padding: 1.75rem 1.5rem;
+    inset 0 0 0 2px $pp-bg,
+    4px 4px 0 $pp-shadow;
+  padding: $pp-space-4;
+  position: relative;
+}
+
+body.pp-retro .post-content::after,
+body.pp-retro .home::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 2px,
+    transparent 2px,
+    transparent 6px
+  );
 }
 
 body.pp-retro .post-list-heading {
@@ -216,12 +305,12 @@ body.pp-retro .post-list > li {
 }
 
 body.pp-retro .post-meta {
-  color: $g7;
+  color: $g6;
   font-size: 1.15rem;
 }
 
 body.pp-retro .footer-col-wrapper {
-  color: $g7;
+  color: $g6;
 }
 
 body.pp-retro .site-footer {
@@ -231,7 +320,7 @@ body.pp-retro .site-footer {
 }
 
 body.pp-retro .footer-heading {
-  color: $g10;
+  color: $pp-text-strong;
   font-family: "VT323", monospace;
   font-size: $pp-body;
   font-weight: bold;
@@ -248,25 +337,41 @@ body.pp-retro code {
 
 /* Minima ships Rouge styles with white/#eef backgrounds and colored tokens — override for dark + grayscale only */
 body.pp-retro div.highlighter-rouge {
-  background: $g0 !important;
+  background: transparent !important;
   margin-bottom: 1rem;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
-body.pp-retro .highlight,
-body.pp-retro div.highlighter-rouge .highlight {
-  background: $g0 !important;
-  border: 2px solid $g5;
-  box-shadow: 3px 3px 0 $g0;
+body.pp-retro figure.highlight {
+  margin-left: 0;
+  margin-right: 0;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body.pp-retro div.highlighter-rouge > .highlight,
+body.pp-retro figure.highlight {
+  background: $pp-bg !important;
+  border: 2px solid $pp-border-strong;
+  box-shadow: 4px 4px 0 $pp-shadow;
   color: $g9 !important;
+  position: relative;
 }
 
 body.pp-retro .highlight pre {
   background: transparent !important;
   color: $g9 !important;
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem 0.95rem;
   border: 0;
   overflow-x: auto;
+  text-shadow:
+    0 0 5px $pp-glow,
+    0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 body.pp-retro .highlight pre code {
@@ -443,11 +548,14 @@ body.pp-retro .highlight .go {
 body.pp-retro .post-content table {
   border-collapse: collapse;
   width: 100%;
-  margin: 1.25rem 0;
+  margin: $pp-space-4 0;
   font-size: 1em;
   color: $g9 !important;
-  border: 2px solid $g5;
-  background: $g1;
+  border: 3px solid $pp-border;
+  background: $pp-surface;
+  box-shadow:
+    inset 0 0 0 2px $pp-bg,
+    4px 4px 0 $pp-shadow;
 }
 
 body.pp-retro .post-content table tr {
@@ -456,23 +564,24 @@ body.pp-retro .post-content table tr {
 
 body.pp-retro .post-content table th,
 body.pp-retro .post-content table td {
-  border: 1px solid $g5;
-  padding: 0.5rem 0.65rem;
+  border: 2px solid $pp-border;
+  padding: 0.55rem 0.7rem;
   text-align: left;
   vertical-align: top;
   color: $g9 !important;
-  background-color: $g1 !important;
+  background-color: $pp-surface !important;
 }
 
 body.pp-retro .post-content table tbody tr:nth-child(even) td {
-  background-color: $g2 !important;
+  background-color: $pp-surface-raised !important;
 }
 
 body.pp-retro .post-content table th {
   background-color: $g3 !important;
-  color: $g11 !important;
+  color: $pp-text-strong !important;
   font-weight: bold;
   font-family: "VT323", ui-monospace, monospace;
+  text-shadow: 2px 2px 0 $pp-shadow;
 }
 
 body.pp-retro .post-content hr {
@@ -483,10 +592,20 @@ body.pp-retro .post-content hr {
 
 /* Mobile nav panel */
 @media screen and (max-width: 600px) {
+  body.pp-retro {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
+
   body.pp-retro .site-nav .trigger {
-    background: $g1;
-    border: 3px solid $g5;
-    box-shadow: 4px 4px 0 $g0;
+    background: $pp-surface;
+    border: 3px solid $pp-border;
+    box-shadow: 4px 4px 0 $pp-shadow;
   }
 
   body.pp-retro .site-nav .page-link {
@@ -497,5 +616,22 @@ body.pp-retro .post-content hr {
 
   body.pp-retro .site-title {
     font-size: 14px;
+  }
+
+  body.pp-retro .post-content,
+  body.pp-retro .home {
+    padding: 1.1rem 1rem;
+  }
+
+  body.pp-retro .post-header .post-title {
+    font-size: 1.9rem;
+  }
+
+  body.pp-retro .post-content h2 {
+    font-size: 1.62rem;
+  }
+
+  body.pp-retro .post-content h3 {
+    font-size: 1.36rem;
   }
 }
