@@ -35,7 +35,7 @@ $pp-space-2: 0.75rem;
 $pp-space-3: 1rem;
 $pp-space-4: 1.5rem;
 $pp-space-5: 2rem;
-$pp-content-width: 54rem;
+$pp-content-width: 86rem;
 
 /* Reading size (VT323) — one base step + slightly larger section titles */
 $pp-body: 1.56rem;
@@ -590,6 +590,180 @@ body.pp-retro .post-content hr {
   margin: 1.75rem 0;
 }
 
+/* Emulator page: match Studio/ImGui shell styling from app screenshots */
+body.pp-retro .post-content.pp-emulator-page {
+  width: min(1240px, 100%);
+  max-width: none;
+  margin: 0 auto;
+  padding: 0.7rem;
+  color: #aeb8c3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  border: 1px solid #264543;
+  box-shadow:
+    inset 0 0 0 1px #111921,
+    0 0 0 1px #091017;
+  background:
+    linear-gradient(rgba(61, 133, 128, 0.12) 1px, transparent 1px) 0 0 / 100% 24px,
+    linear-gradient(90deg, rgba(61, 133, 128, 0.095) 1px, transparent 1px) 0 0 / 24px 100%,
+    linear-gradient(180deg, #060b10 0%, #05090d 100%);
+}
+
+body.pp-retro .post-content.pp-emulator-page::after {
+  display: none;
+}
+
+body.pp-retro .pp-emulator-page #wasm-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.65rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #25514d;
+}
+
+body.pp-retro .pp-emulator-page #wasm-bar::after {
+  content: "Load game binaries by dragging and dropping onto the window.";
+  color: #7e8a95;
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+body.pp-retro .pp-emulator-page #wasm-bar label {
+  border: 1px solid #2d5f5a;
+  background: linear-gradient(#1f4744, #183534);
+  color: #c4d0da;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0.38rem 0.65rem 0.33rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+body.pp-retro .pp-emulator-page #wasm-bar label:hover {
+  border-color: #56a7a1;
+  color: #f2f7fb;
+}
+
+body.pp-retro .pp-emulator-page #wasm-bar input[type="file"] {
+  display: none;
+}
+
+body.pp-retro .pp-emulator-page #canvas {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: 1px solid #28524f;
+  background-color: #05090d;
+  min-height: min(72vh, 720px);
+  box-shadow: inset 0 0 0 1px #0d151d;
+}
+
+/* Site-wide Studio skin: apply emulator styling language across all pages */
+body.pp-retro {
+  background-color: #05090d;
+  color: #aeb8c3;
+  background-image:
+    linear-gradient(rgba(61, 133, 128, 0.095) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61, 133, 128, 0.08) 1px, transparent 1px);
+  background-size: 100% 24px, 24px 100%;
+}
+
+body.pp-retro::before {
+  background:
+    radial-gradient(circle at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.36) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(97, 173, 166, 0.03) 0,
+      rgba(97, 173, 166, 0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+}
+
+body.pp-retro .site-header.pp-site-header {
+  background: linear-gradient(180deg, #101922 0%, #0b1218 100%);
+  border-bottom: 1px solid #27514d;
+  box-shadow:
+    inset 0 0 0 1px #16232d,
+    0 1px 0 #081119;
+}
+
+body.pp-retro .site-title,
+body.pp-retro .site-title:visited {
+  color: #e6eef6;
+  text-shadow: none;
+}
+
+body.pp-retro .site-nav .page-link {
+  color: #c5d1dc;
+  border: 1px solid #2d5f5a;
+  background: linear-gradient(#1f4744, #183534);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.pp-retro .site-nav .page-link:hover {
+  color: #f3f8fb;
+  border-color: #56a7a1;
+  background: linear-gradient(#25514d, #1b3b39);
+}
+
+body.pp-retro .post-content,
+body.pp-retro .home {
+  background:
+    linear-gradient(rgba(61, 133, 128, 0.1) 1px, transparent 1px) 0 0 / 100% 24px,
+    linear-gradient(90deg, rgba(61, 133, 128, 0.07) 1px, transparent 1px) 0 0 / 24px 100%,
+    linear-gradient(180deg, #070d12 0%, #060a0f 100%);
+  border: 1px solid #264543;
+  box-shadow:
+    inset 0 0 0 1px #111921,
+    0 0 0 1px #091017;
+}
+
+body.pp-retro .post-header .post-title {
+  color: #e8eff6;
+  text-shadow: none;
+  border: 1px solid #2a5754;
+  background: linear-gradient(#1a3f3c, #132d2c);
+  box-shadow: inset 0 0 0 1px #0f171f;
+}
+
+body.pp-retro .post-content h2 {
+  color: #d9e5ef;
+  border: 1px solid #2f6964;
+  background: linear-gradient(180deg, #1f4643 0%, #163231 100%);
+  box-shadow: inset 0 0 0 1px #0f171f;
+  text-shadow: none;
+}
+
+body.pp-retro .post-content h3 {
+  color: #c8d9e7;
+  border-left: 2px solid #4d8f89;
+  background: linear-gradient(180deg, #163534 0%, #122828 100%);
+  text-shadow: none;
+}
+
+body.pp-retro .post-content table {
+  border: 1px solid #2a5a56;
+  background: #0a1117;
+  box-shadow: inset 0 0 0 1px #111921;
+}
+
+body.pp-retro .post-content table th,
+body.pp-retro .post-content table td {
+  border: 1px solid #2b4f4b;
+  background-color: #0d141b !important;
+}
+
+body.pp-retro .post-content table tbody tr:nth-child(even) td {
+  background-color: #111a22 !important;
+}
+
+body.pp-retro .site-footer {
+  border-top: 1px solid #27514d;
+  background: linear-gradient(180deg, #0e151d 0%, #0a1017 100%);
+}
+
 /* Mobile nav panel */
 @media screen and (max-width: 600px) {
   body.pp-retro {
@@ -633,5 +807,10 @@ body.pp-retro .post-content hr {
 
   body.pp-retro .post-content h3 {
     font-size: 1.36rem;
+  }
+
+  body.pp-retro .pp-emulator-page #wasm-bar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
