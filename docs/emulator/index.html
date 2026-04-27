@@ -1,8 +1,8 @@
 ---
 layout: default
 permalink: /emulator/
-title: Emulator
-description: Run PicoPanda games in the browser (WebAssembly).
+title: Dev Studio
+description: Run and build PicoPanda games in the browser (WebAssembly).
 ---
 {% assign pp_emu_js = '/emulator/PicoPanda_Studio.js' | relative_url %}
 {% assign pp_emu_dir = '/emulator/' | relative_url %}
@@ -11,10 +11,6 @@ description: Run PicoPanda games in the browser (WebAssembly).
 <article class="post">
   <div class="post-content pp-emulator-page">
     <noscript>This page requires JavaScript.</noscript>
-    <div id="wasm-bar" title="Or drag a .bin onto the page or canvas">
-      <label for="wasm-file-input">Load .bin...</label>
-      <input type="file" id="wasm-file-input" accept=".bin,application/octet-stream">
-    </div>
     <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"
       title="Drag a PicoPanda game .bin here"></canvas>
   </div>
@@ -78,15 +74,6 @@ description: Run PicoPanda games in the browser (WebAssembly).
         if (canvas) {
           ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (ev) {
             canvas.addEventListener(ev, ev === 'drop' ? onDrop : preventNav, false);
-          });
-        }
-        var inp = document.getElementById('wasm-file-input');
-        if (inp) {
-          inp.addEventListener('change', function () {
-            if (inp.files && inp.files[0]) {
-              stageFileAndNotify(inp.files[0]);
-            }
-            inp.value = '';
           });
         }
       }
