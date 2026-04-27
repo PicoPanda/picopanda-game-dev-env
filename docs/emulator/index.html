@@ -15,6 +15,19 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
       title="Drag a PicoPanda game .bin here"></canvas>
   </div>
 </article>
+<style>
+  /* Emulator-specific stability: avoid full-page overlay repaints causing flashes. */
+  body.pp-retro::before {
+    display: none !important;
+  }
+  body.pp-retro .pp-emulator-page::after {
+    display: none !important;
+  }
+  body.pp-retro .pp-emulator-page #canvas {
+    image-rendering: pixelated;
+    background-color: #05090d;
+  }
+</style>
 
 <script>
     (function () {
@@ -78,6 +91,22 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
         }
       }
 
+      function stabilizeCanvasSizingRuntime() {
+        if (typeof Browser === 'undefined' || !Browser.updateCanvasDimensions) return;
+        var originalUpdateCanvasDimensions = Browser.updateCanvasDimensions;
+        Browser.updateCanvasDimensions = function (canvas, wNative, hNative) {
+          if (!canvas) return;
+          // Guard against transient undefined native dimensions, which can reset
+          // the canvas backbuffer and show up as visible flashes.
+          if (!canvas.widthNative || !canvas.heightNative) {
+            canvas.widthNative = canvas.width || 1;
+            canvas.heightNative = canvas.height || 1;
+          }
+          return originalUpdateCanvasDimensions.call(Browser, canvas, wNative, hNative);
+        };
+      }
+
+
       var Module = {
         mainScriptUrlOrBlob: emuJs,
         locateFile: function (path) {
@@ -92,6 +121,7 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
           if (!c) { console.error('PicoPanda WASM: missing #canvas'); }
           return c;
         })(),
+        preRun: [stabilizeCanvasSizingRuntime],
         postRun: [installFileDrop]
       };
       window.Module = Module;
