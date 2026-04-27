@@ -43,11 +43,40 @@ if (typeof window === "undefined") {
 
     if (window.crossOriginIsolated) return;
 
+    const RELOAD_GUARD_KEY = "pp-coi-sw-reloaded";
+
+    function reloadOnceForCOI() {
+      try {
+        if (sessionStorage.getItem(RELOAD_GUARD_KEY) === "1") return;
+        sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
+      } catch (_) {
+        // If sessionStorage is unavailable, still avoid hard failure.
+      }
+      window.location.reload();
+    }
+
+    if (navigator.serviceWorker.controller) {
+      // Service worker is already controlling this page; no need to force reload.
+      return;
+    }
+
     navigator.serviceWorker
       .register(window.document.currentScript.src, { scope: "./" })
-      .then(() => {
-        if (!window.crossOriginIsolated) {
-          window.location.reload();
+      .then((registration) => {
+        // If a controller appears, this indicates SW takeover and a single reload
+        // can apply COOP/COEP headers to the controlled document.
+        navigator.serviceWorker.addEventListener(
+          "controllerchange",
+          () => {
+            if (!window.crossOriginIsolated) reloadOnceForCOI();
+          },
+          { once: true }
+        );
+
+        // If the active worker is already present but this page is not yet
+        // controlled, do a guarded reload once to attach controller on next load.
+        if (registration.active && !navigator.serviceWorker.controller && !window.crossOriginIsolated) {
+          reloadOnceForCOI();
         }
       })
       .catch((error) => {
