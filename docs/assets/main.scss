@@ -35,7 +35,7 @@ $pp-space-2: 0.75rem;
 $pp-space-3: 1rem;
 $pp-space-4: 1.5rem;
 $pp-space-5: 2rem;
-$pp-content-width: 72rem;
+$pp-content-width: 120rem;
 
 /* Reading size (VT323) — one base step + slightly larger section titles */
 $pp-body: 1.56rem;
@@ -256,10 +256,11 @@ body.pp-retro .site-nav .menu-icon svg path {
 
 body.pp-retro .page-content {
   padding-top: 2rem;
-  padding-bottom: 3rem;
+  padding-bottom: 1.25rem;
 }
 
 body.pp-retro .wrapper {
+  width: 96vw;
   max-width: $pp-content-width;
 }
 
@@ -271,8 +272,15 @@ body.pp-retro .home {
   box-shadow:
     inset 0 0 0 2px $pp-bg,
     4px 4px 0 $pp-shadow;
-  padding: $pp-space-4;
+  padding: $pp-space-4 $pp-space-4 $pp-space-3;
+  margin-bottom: 0;
   position: relative;
+}
+
+/* Avoid oversized trailing whitespace from last child margins in cards. */
+body.pp-retro .post-content > :last-child,
+body.pp-retro .home > :last-child {
+  margin-bottom: 0 !important;
 }
 
 body.pp-retro .post-content::after,
@@ -651,10 +659,12 @@ body.pp-retro .pp-emulator-page #wasm-bar input[type="file"] {
 body.pp-retro .pp-emulator-page #canvas {
   display: block;
   width: 100%;
+  height: auto;
+  max-height: 68vh;
   margin: 0 auto;
   border: 1px solid #28524f;
   background-color: #05090d;
-  min-height: min(48vh, 460px);
+  min-height: 360px;
   box-shadow: inset 0 0 0 1px #0d151d;
 }
 
