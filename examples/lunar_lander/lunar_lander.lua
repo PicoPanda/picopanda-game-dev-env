@@ -2,6 +2,8 @@ game_title = "Lunar Lander"
 
 --game variables
 g = 0.0125 --gravity
+v_land_max_x = 0.2
+v_land_max_y = 0.4
 
 function game_logic_init()
     game_over=false
@@ -9,6 +11,7 @@ function game_logic_init()
     make_player()
     make_ground()
     make_stars()
+    make_vbar()
 end
 
 function game_logic_loop()
@@ -25,13 +28,15 @@ function game_logic_loop()
     draw_stars()
     draw_ground()
     draw_player(buttons)
+    draw_vbar()
+
     if(game_over) then
         if(win) then
             draw_string(48, 48, "You win!", FONT_5X7_FIXED, 1, 0x0E)
         else
             draw_string(47, 48, "You died!", FONT_5X7_FIXED, 1, 0x0E)
         end
-        draw_string(20, 70, "Press A to play again.", FONT_5X7_FIXED, 1, 0x0E)
+        draw_string(20, 60, "Press A to play again.", FONT_5X7_FIXED, 1, 0x0E)
     end
 end
 
@@ -120,6 +125,8 @@ function draw_player(buttons)
     end
 end
 
+
+
 function make_ground()
     --create the ground
     gnd = {}
@@ -167,7 +174,7 @@ function check_land()
 
     over_pad = (l_x >= pad.x) and (r_x <= pad.x + pad.width)
     on_pad = b_y >= pad.y - 1
-    slow = (player.dy < 0.4) and (player.dx < 0.2) and (player.dx > -0.2)
+    slow = (player.dy < v_land_max_y) and (player.dx < v_land_max_x) and (player.dx > -v_land_max_x)
 
     if(over_pad and on_pad and slow) then
         end_game(true)
@@ -210,4 +217,71 @@ function draw_stars()
     for i=1,50 do
         draw_pixel(stars[i].x, stars[i].y, stars[i].c)
     end
+end
+
+function make_vbar()
+
+
+    vbar = {}
+    vbar.x_scale = 60
+    vbar.y_scale = 40
+    vbar.x_lim_p = 64 + math.floor(v_land_max_x * vbar.x_scale) - 1
+    vbar.x_lim_n = 63 - math.floor(v_land_max_x * vbar.x_scale) + 1
+    vbar.y_lim_p = 64 + math.floor(v_land_max_y * vbar.y_scale) - 1
+    vbar.y_lim_n = 63 - math.floor(v_land_max_y * vbar.y_scale) + 1
+end
+
+function draw_vbar()
+    draw_rectangle(63, 0, 2, 6, false, 0x0E)
+    draw_rectangle(0, 63, 6, 2, false, 0x0E)
+
+    draw_line(vbar.x_lim_n, 0, vbar.x_lim_n, 5, 0x0E)
+    draw_line(vbar.x_lim_p, 0, vbar.x_lim_p, 5, 0x0E)
+    draw_line(0, vbar.y_lim_n, 5, vbar.y_lim_n, 0x0E)
+    draw_line(0, vbar.y_lim_p, 5, vbar.y_lim_p, 0x0E)
+
+    local vx = math.floor(player.dx * vbar.x_scale)
+    local vy = math.floor(player.dy * vbar.y_scale)
+    local x
+    local y
+
+    --[[
+    draw_string(2, 6, "vx: "..vx, FONT_PICOPIXEL, 1, 0x0E)
+    draw_string(2, 12, "vy: "..vy, FONT_PICOPIXEL, 1, 0x0E)
+    --]]
+
+    if(vx >= 0) then
+        x = 64
+    else
+        x = 64 + vx
+        vx = math.abs(vx)
+        --[[
+            TODO: There is a but in the draw function that doesn't draw if x or y is negative, fix this.
+            It should be able to draw off of screen.
+        --]]
+        if(x < 0) then
+            x = 0
+        end
+    end
+    if(vx > 64) then vx = 64 end
+    draw_rectangle(x, 2, vx, 2, false, 0x0A)
+    --[[
+        TODO: There seems to be a bug with draw_rectangle, if the width is 0 then it draws a width of 2 in reverse.
+    --]]
+
+    if(vy >= 0) then
+        y = 64
+    else
+        y = 64 + vy
+        vy = math.abs(vy)
+        --[[
+            TODO: There is a but in the draw function that doesn't draw if x or y is negative, fix this.
+            It should be able to draw off of screen.
+        --]]
+        if(y < 0) then
+            y = 0
+        end
+    end
+    if(vy > 64) then vy = 64 end
+    draw_rectangle(2, y, 2, vy, false, 0x0A)
 end
