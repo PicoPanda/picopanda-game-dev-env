@@ -31,6 +31,7 @@ function game_logic_loop()
             init_stars()
             if(game_over) then
                 fuel.amount = starting_fuel
+                landings = 0
             elseif(landed) then
                 fuel.amount = fuel.amount + bonus_fuel
                 if(fuel.amount > starting_fuel) then
@@ -151,7 +152,7 @@ function draw_player()
         draw_sprite(PIXELS_8x8, player.sprite, p_x, p_y, 1, 1, false, false)
         draw_sprite(PIXELS_8x8, 4, p_x, p_y-8, 1, 1, false, false)
     elseif(round_over) then
-        if(exploding_spr <= 9) then
+        if(exploding_spr < 9) then
             draw_sprite(PIXELS_8x8, exploding_spr, p_x, p_y, 1, 1, false, false)
             exploding_frc = exploding_frc - 1
             if(exploding_frc == 0) then
@@ -368,9 +369,14 @@ function make_fuel()
     local bar_len = math.floor(fuel.amount / fuel.scale)
     fuel.ibar = {x = 127 - bar_len, y = 1, h = 6, l = bar_len, c = 1}
     fuel.obar = {x = (fuel.ibar.x - 1), y = (fuel.ibar.y - 1), h = (fuel.ibar.h + 2), l = (fuel.ibar.l + 2), c = 10}
+    fuel.sprite = {}
+    fuel.sprite.num = 9
+    fuel.sprite.x = fuel.obar.x - 8
+    fuel.sprite.y = fuel.obar.y
 end
 
 function draw_fuel()
+    draw_sprite(PIXELS_8x8, fuel.sprite.num, fuel.sprite.x, fuel.sprite.y, 1, 1, false, false)
     draw_rectangle(fuel.obar.x, fuel.obar.y, fuel.obar.l, fuel.obar.h, true, fuel.obar.c)
     local bar_len = math.floor(fuel.amount / fuel.scale)
     draw_rectangle(fuel.ibar.x, fuel.ibar.y, bar_len, fuel.ibar.h, true, fuel.ibar.c)

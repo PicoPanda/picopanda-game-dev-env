@@ -9,6 +9,15 @@ function game_logic_init()
     start_pause = 60
     level_inc = 180
     level_count = level_inc
+    roof_level_min = 33
+    roof_level_max = 38
+    floor_level_min = 94
+    floor_level_max = 89
+    roof_max_level = false
+    floor_max_level = false
+    change_offset = false
+    offset_inc = 10
+    offset_count = offset_inc
     make_bubbles()
     make_cave()
     make_player()
@@ -126,18 +135,42 @@ function update_level()
     level_count = level_count - 1
     if(level_count == 0) then
         level_count = level_inc
-        if(cave.top_lim_l < 43) then
+
+        if(cave.top_lim_l < roof_level_max) then
             cave.top_lim_l = cave.top_lim_l + 1
+        else
+            roof_max_level = true
         end
-        if(cave.bot_lim_u > 84) then
+        if(cave.bot_lim_u > floor_level_max) then
             cave.bot_lim_u = cave.bot_lim_u - 1
+        else
+            floor_max_level = true
         end
 
         if(cave.top_lim_u < (cave.top_lim_l - 5)) then
             cave.top_lim_u = cave.top_lim_u + 1
+            cave.min_offset = (3 - cave.top_lim_u)
         end
         if(cave.bot_lim_l > (cave.bot_lim_u + 5)) then
             cave.bot_lim_l = cave.bot_lim_l - 1
+            cave.max_offset = (124 - cave.bot_lim_l)
+        end
+
+        change_offset = (roof_max_level and floor_max_level)
+
+        if(change_offset) then
+            if(offset_inc > 1) then 
+                offset_inc = offset_inc - 1
+            end
+        end
+    end
+
+    if(change_offset) then
+        offset_count = offset_count - 1
+        if(offset_count == 0) then
+            offset_count = offset_inc
+            local offset = rnd_int(-3, 4)
+            cave.offset = mid_int(cave.min_offset, cave.offset + offset, cave.max_offset)
         end
     end
 end
@@ -148,10 +181,13 @@ function make_cave()
     cave = {}
     cave.col = 3
     cave.seg = {{["top"]=5, ["bot"]=119}}
-    cave.top_lim_l = 35 --how low can the ceiling go.
+    cave.top_lim_l = roof_level_min --how low can the ceiling go.
     cave.top_lim_u = 3 --ceiling cannot be higher than this value.
     cave.bot_lim_l = 124 --floor cannot be lower than this value.
-    cave.bot_lim_u = 92 --how high can the floor get.
+    cave.bot_lim_u = floor_level_min --how high can the floor get.
+    cave.offset = 0 -- The current offset of the above values.
+    cave.min_offset = 0
+    cave.max_offset = 0
 
     --insert more cave
     for i=1,128 do
@@ -172,8 +208,8 @@ function update_cave()
         local seg = {}
         local up = rnd_int(-3, 4)
         local dwn = rnd_int(-3, 4)
-        seg.top = mid_int(cave.top_lim_u, cave.seg[#cave.seg].top + up, cave.top_lim_l)
-        seg.bot = mid_int(cave.bot_lim_u, cave.seg[#cave.seg].bot + dwn, cave.bot_lim_l)
+        seg.top = mid_int(cave.top_lim_u + cave.offset, cave.seg[#cave.seg].top + up, cave.top_lim_l + cave.offset)
+        seg.bot = mid_int(cave.bot_lim_u + cave.offset, cave.seg[#cave.seg].bot + dwn, cave.bot_lim_l + cave.offset)
         table.insert(cave.seg, seg)
     end
 end
@@ -185,7 +221,6 @@ function draw_cave()
         draw_line(xpos, 127, xpos, cave.seg[i].bot, cave.col)
     end
 end
-
 
 --> Bubbles
 bubble_col = 10
