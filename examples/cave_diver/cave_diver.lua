@@ -1,7 +1,7 @@
 game_title = "Cave Diver"
 
 --game variables
-gravity = 0.1
+gravity = 0.065
 
 function game_logic_init()
     player_died = true
@@ -89,7 +89,7 @@ function move_player(buttons)
 
     -- Thrust up
     if(not player.dead and buttons.up_pressed) then
-        player.dy = player.dy - 3.5
+        player.dy = player.dy - 3
         phrase_play(0)
     end
 
@@ -148,10 +148,10 @@ function make_cave()
     cave = {}
     cave.col = 3
     cave.seg = {{["top"]=5, ["bot"]=119}}
-    cave.top_lim_l = 20 --how low can the ceiling go.
+    cave.top_lim_l = 35 --how low can the ceiling go.
     cave.top_lim_u = 3 --ceiling cannot be higher than this value.
     cave.bot_lim_l = 124 --floor cannot be lower than this value.
-    cave.bot_lim_u = 107 --how high can the floor get.
+    cave.bot_lim_u = 92 --how high can the floor get.
 
     --insert more cave
     for i=1,128 do
