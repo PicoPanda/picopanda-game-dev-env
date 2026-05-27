@@ -6,6 +6,8 @@ v_land_max_x = 0.2
 v_land_max_y = 0.4
 starting_fuel = 300
 bonus_fuel = 60
+penalty_fuel = 100
+call = 0
 
 function game_logic_init()
     game_over = false
@@ -41,6 +43,7 @@ function game_logic_loop()
             game_over = false
             round_over = false
             landed = false
+            call = 0
         end
     end
 
@@ -60,7 +63,8 @@ function game_logic_loop()
                 draw_string(22, 48, "Successful Landing!", FONT_5X7_FIXED, 1, 0x0E)
                 draw_string(44, 60, "+"..bonus_fuel.." Fuel", FONT_5X7_FIXED, 1, 0x0E)
             else
-                draw_string(47, 48, "You died!", FONT_5X7_FIXED, 1, 0x0E)
+                draw_string(26, 48, "Lander Destroyed!", FONT_5X7_FIXED, 1, 0x0E)
+                draw_string(44, 60, "-"..penalty_fuel.." Fuel", FONT_5X7_FIXED, 1, 0x0E)
             end
             draw_string(22, 72, "Press A to continue.", FONT_5X7_FIXED, 1, 0x0E)
         end
@@ -228,12 +232,12 @@ function draw_ground()
 end
 
 function check_land()
-    local l_x = math.floor(player.x)     --left side of ship
-    local r_x = math.floor(player.x + 7) --right side of ship
-    local b_y = math.floor(player.y + 7) --bottom of ship
+    local l_x = math.floor(player.x + 0.5)      --left side of ship
+    local r_x = l_x + 7                         --right side of ship
+    local b_y = math.floor(player.y + 0.5) + 7  --bottom of ship
 
     over_pad = (l_x >= pad.x) and (r_x <= pad.x + pad.width)
-    on_pad = b_y >= pad.y - 1
+    on_pad = (b_y >= (pad.y - 1))
     slow = (player.dy < v_land_max_y) and (player.dx < v_land_max_x) and (player.dx > -v_land_max_x)
 
     if(over_pad and on_pad and slow) then
@@ -244,6 +248,7 @@ function check_land()
         for i=l_x,r_x do
             if(gnd.seg[i] <= b_y) then
                 end_round(false)
+                break
             end
         end
     end
@@ -251,18 +256,24 @@ end
 
 function end_round(success)
     round_over = true
-    if(fuel.amount == 0) then
-        game_over = true
-    end
     landed = success
     exploding_spr = 5
     exploding_frc = 5
 
     if(landed) then
-        landings = landings + 1
         phrase_play(1, 0)
+        landings = landings + 1
     else
         phrase_play(2, 0)
+        fuel.amount = fuel.amount - penalty_fuel
+        if(fuel.amount < 0) then
+            fuel.amount = 0
+        end
+        call = call + 1
+    end
+
+    if(fuel.amount == 0) then
+        game_over = true
     end
 end
 
