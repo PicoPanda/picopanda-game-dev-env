@@ -116,9 +116,9 @@ class SpriteSheet:
 
     def __init__(self):
         # In order of luminosity
-        #self.paletteMap = [0, 1, 2, 5, 6, 4, 12, 15, 3, 10, 14, 11, 8, 7, 9, 13]
+        #self.paletteMap = [0, 1, 2, 3, 4, 5, 13, 15, 6, 9, 12, 10, 7, 8, 11, 14]
         # In order of luminosity but index 0 maps to index 15 for transparency.
-        self.paletteMap = [15, 0, 1, 4, 5, 3, 11, 14,2, 9, 13, 10, 7, 6, 8, 12]
+        self.paletteMap = [15, 0, 1, 2, 3, 4, 12, 14, 5, 8, 11, 9, 6, 7, 10, 13]
         # Custom.
         #self.paletteMap = [15, 1, 2, 4, 5, 0, 11, 14, 3, 9, 13, 10, 7, 6, 8, 12]
         self.pixelArray = []
