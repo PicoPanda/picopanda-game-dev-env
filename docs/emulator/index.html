@@ -3,9 +3,17 @@ layout: default
 permalink: /emulator/
 title: Dev Studio
 description: Run and build PicoPanda games in the browser (WebAssembly).
+# Bump when copying new emulator binaries, or rely on site.time below.
+pp_emu_cache_bust: ""
 ---
 {% assign pp_emu_js = '/emulator/PicoPanda_Studio.js' | relative_url %}
 {% assign pp_emu_dir = '/emulator/' | relative_url %}
+{% assign pp_webserial_js = '/emulator/picopanda_webserial.js' | relative_url %}
+{% if page.pp_emu_cache_bust != "" %}
+  {% assign pp_cache_bust = page.pp_emu_cache_bust %}
+{% else %}
+  {% assign pp_cache_bust = site.time | date: '%s' %}
+{% endif %}
 <script src="{{ '/emulator/coi-serviceworker.js' | relative_url }}"></script>
 
 <article class="post">
@@ -29,10 +37,12 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
   }
 </style>
 
+<script src="{{ pp_webserial_js }}?v={{ pp_cache_bust }}"></script>
 <script>
     (function () {
       var emuDir = {{ pp_emu_dir | jsonify }};
       var emuJs = {{ pp_emu_js | jsonify }};
+      var cacheBust = {{ pp_cache_bust | jsonify }};
 
       function preventNav(e) {
         e.preventDefault();
@@ -114,7 +124,7 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
           if (path.charAt(0) === '/') {
             return path;
           }
-          return emuDir + path.replace(/^\.\//, '');
+          return emuDir + path.replace(/^\.\//, '') + '?v=' + cacheBust;
         },
         canvas: (function () {
           var c = document.getElementById('canvas');
@@ -127,4 +137,4 @@ description: Run and build PicoPanda games in the browser (WebAssembly).
       window.Module = Module;
     })();
 </script>
-<script src="{{ pp_emu_js }}"></script>
+<script src="{{ pp_emu_js }}?v={{ pp_cache_bust }}"></script>
